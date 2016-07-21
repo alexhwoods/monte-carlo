@@ -1,0 +1,8 @@
+pymssql==2.1.2
+flask==0.11.1
+Flask-Cors==2.1.2
+gunicorn==19.6.0
+jsonpickle==0.9.3
+python-dateutil==2.5.3
+bcrypt==3.1.0
+sqlalchemy==1.0.13
