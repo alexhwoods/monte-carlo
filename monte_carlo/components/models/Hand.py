@@ -15,9 +15,6 @@ class Hand(object):
         TODO: I'll finish testing this later, then push it to github.
     """
 
-
-
-
     hands = ['HIGH_CARD', 'PAIR', 'TWO_PAIRS', 'THREE_OF_A_KIND', 'STRAIGHT', 'FLUSH',
              'FULL_HOUSE', 'FOUR_OF_A_KIND', 'STRAIGHT_FLUSH', 'ROYAL_FLUSH']
 
@@ -38,7 +35,7 @@ class Hand(object):
         self.ranks = [card.get_rank() for card in self.cards]
         self.suits = [card.get_suit() for card in self.cards]
 
-    def type(self):
+    def type(self, disabled_hands=[]):
         """ There's a bit of inclusivity, which is why I'm going from the top down than the bottom up.
 
                 For example, a royal flush is always a flush, but a flush is not always a royal flush.
@@ -46,23 +43,23 @@ class Hand(object):
              something like 'elif self.flush() and not royal_flush(): ...', and that's more cumbersome.
         """
 
-        if self.straight_flush():
+        if self.royal_flush() and 'ROYAL_FLUSH' not in disabled_hands:
+            return 'ROYAL_FLUSH'
+        elif self.straight_flush() and 'STRAIGHT_FLUSH' not in disabled_hands:
             return 'STRAIGHT_FLUSH'
-        elif self.straight_flush():
-            return 'STRAIGHT_FLUSH'
-        elif self.four_of_a_kind():
+        elif self.four_of_a_kind() and 'FOUR_OF_A_KIND' not in disabled_hands:
             return 'FOUR_OF_A_KIND'
-        elif self.full_house():
+        elif self.full_house() and 'FULL_HOUSE' not in disabled_hands:
             return 'FULL_HOUSE'
-        elif self.flush():
+        elif self.flush() and 'FLUSH' not in disabled_hands:
             return 'FLUSH'
-        elif self.straight():
+        elif self.straight() and 'STRAIGHT' not in disabled_hands:
             return 'STRAIGHT'
-        elif self.three_of_a_kind():
+        elif self.three_of_a_kind() and 'THREE_OF_A_KIND' not in disabled_hands:
             return 'THREE_OF_A_KIND'
-        elif self.num_pairs() == 2:
+        elif self.num_pairs() == 2 and 'TWO_PAIRS' not in disabled_hands:
             return 'TWO_PAIRS'
-        elif self.num_pairs() == 1:
+        elif self.num_pairs() == 1 and 'PAIR' not in disabled_hands:
             return 'PAIR'
         else:
             return 'HIGH_CARD'
@@ -94,7 +91,6 @@ class Hand(object):
 
         # catches any repeated ranks
         if len(set(self.ranks)) < 5:
-            print(len(set(self.ranks)))
             return False
 
         return True
@@ -120,14 +116,4 @@ class Hand(object):
         for i in self.cards:
             arr.append(str(i))
         pprint(arr)
-        print("\n")
 
-
-
-
-# currently there is a straight in this hand
-# hand1 = Hand([Card('spades', 'ACE'), Card('DIAMONDS', 'KING'), Card('DIAMONDS', 'QUEEN'),
-#               Card('DIAMONDS', 'JACK'), Card('DIAMONDS', '9')])
-#
-# hand1.show()
-# print(hand1.type())

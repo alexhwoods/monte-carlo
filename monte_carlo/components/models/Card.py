@@ -55,8 +55,15 @@ class Card(object):
         # I decided it makes no sense to flip a card that's face up back over, in Texas Hold'em at least
         self.faceUp = True
 
-    def is_equal(self, card):
-        return self.get_suit() == card.get_suit() and self.get_rank() == self.get_rank()
+    # DON'T DELETE (it breaks the equality operator)
+    def __hash__(self):
+        return hash(self.__dict__.values())
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
 
     def __str__(self):
         return str(self.rank) + " OF " + str(self.suit)

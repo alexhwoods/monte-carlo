@@ -1,9 +1,11 @@
 # Author: Alex Woods <alexhwoods@gmail.com>
 
 from monte_carlo.components.models.Card import Card
+from itertools import product
 from pprint import pprint
 import collections
 import random
+
 
 class Deck(object):
     """A standard deck of playing cards, minus the jokers. A deck will have the
@@ -30,15 +32,14 @@ class Deck(object):
 
     def __init__(self):
         self.cards = collections.deque()
-        for i in Card.suits:
-            for j in Card.ranks:
-                self.cards.append(Card(i, j))
+        for i,j in product(Card.suits, Card.ranks):
+            self.cards.append(Card(i, j))
 
-    def draw(self):
+    def draw_one(self):
         return self.cards.pop()
 
     # to draw multiple cards
-    def draw(self, num_cards=1):
+    def draw_many(self, num_cards=1):
         arr = []
         for i in range(num_cards):
             arr.append(self.cards.pop())
@@ -56,6 +57,9 @@ class Deck(object):
 
     def shuffle(self):
         random.shuffle(self.cards)
+
+    def is_full(self):
+        return set(self.cards) == set([Card(i,j) for i, j in product(Card.suits, Card.ranks)])
 
     def show(self):
         arr = []
