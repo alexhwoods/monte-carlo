@@ -171,7 +171,7 @@ class Round(object):
        card, and score them on that.
 
     """""
-    # TODO this method is broken. I need to fix it.
+    # TODO this method is not good enough. I need to fix it, with a rulebook by my right next to me as I do it.
     def get_winner(self):
         # 1
         hands = {}

@@ -121,10 +121,10 @@ class Game(object):
 # game.end_round()
 
 # Testing Session 2 - testing the get_winners() function in round. See GameTester.py
-# game2 = Game()
-# game2.add_player(Player("Silvia", 400))
-# game2.add_player(Player("Randolf", 400))
-#
-# game2.test_winners()
+game2 = Game()
+game2.add_player(Player("Silvia", 400))
+game2.add_player(Player("Randolf", 400))
+
+game2.test_winners()
 
 

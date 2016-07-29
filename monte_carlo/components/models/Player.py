@@ -8,6 +8,7 @@ class Player(object):
         self.name = name
         self.chips = chips
         self.hand = None
+        self.best_round_hand = None
         self.current_bet = None
         self.folded = False
         self.computer = computer
