@@ -45,7 +45,7 @@ class Round(object):
 
     def flop(self):
         self.community_cards = self.deck.draw_many(3)
-        print("The table cards are:")
+        # print("The table cards are:")
         self.cards_print = [str(card) for card in self.community_cards]
         # pprint(self.cards_print)
 
@@ -61,6 +61,10 @@ class Round(object):
         river = self.deck.draw_one()
         self.community_cards.append(river)
         self.cards_print.append(str(river))
+
+        # all the players calculate their best hand
+        for player in self.players:
+            player.best_round_hand = Hand.get_best_hand(self.community_cards + player.hand.cards)
 
         print("\n The table cards are:")
         pprint(self.cards_print)
@@ -149,80 +153,26 @@ class Round(object):
 
         print("\n")
 
-    # get winner
-    """"" This method is complicated because breaking a tie is complicated. 80% of the time
-    there won't be a tie, and it's easy. However, we have to consider the case where people have
-    very similar hands. There are legitimate situations that can end in a tie
-    (i.e. community cards are a royal flush and both players hold a pair of 5's)
-
-    1.  Some initialization. I'm going to set winners equal to all the players and then
-        whittle it down to those with the best hands (and those not folded).
-
-    2.  This block takes the hand that the winners are tied on, and puts it in a disabled list,
-        so that way when block 3 searches for the next best hand, the previous hand is not considered.
-        If it's a high card and they still tie, that means they really are tied.
-
-    3. Loops all possible 5 cards hands of the 7 cards the player can use (2 hole cards and
-       5 community cards). It assigns the player a score for their hand, and then the winners
-       are selected based on that score. If there is a tie, we loop through again, except now
-       the best hand that the tied players had is disabled, so it finds their next best hand.
-
-    4. If everyone's best hand is a high card, we have to get the value of each players highest
-       card, and score them on that.
-
-    """""
-    # TODO this method is not good enough. I need to fix it, with a rulebook by my right next to me as I do it.
     def get_winner(self):
-        # 1
-        hands = {}
-        winners = self.players
-        start = True
-        highcard = False
-        disabled = []
-        while (len(winners) > 1 or start) and not highcard:
+        for player in self.players:
+            player.best_round_hand = Hand.get_best_hand(self.community_cards + player.hand.cards)
 
-            # 2
-            if len(winners) > 1 and not start:
-                disabled.append(hands[winners[0]])
+        winners = [self.players[0]]
+        best_hand = winners[0].best_round_hand
+        for player in self.players:
+            if Hand.winner(best_hand, player.best_round_hand) == player.best_round_hand:
+                # if there is a clear winner we need to reset the winners array, because maybe there was a tie
+                # between two players and a third player beat one of them (and thus both of them)
+                winners = [player]
+                best_hand = player.best_round_hand
 
-            # the first time through is pretty unique
-            start = False
+            # if there is a tie!
+            elif Hand.winner(best_hand, player.best_round_hand) is None and player not in winners:
+                winners.append(player)
+            else:
+                pass
 
-            # 3
-            for player in winners:
-                if not player.folded:
-                    cards = player.hand.cards + self.community_cards
-                    best_hand = 'HIGH_CARD'  # this is like setting max = 0 and then updating it
-
-
-                    for combo in list(combinations(cards, 5)):
-                        hand = Hand(list(combo))
-                        if Hand.value[hand.type(disabled)] > Hand.value[best_hand]:
-                            best_hand = hand.type(disabled)
-
-                    hands[player] = best_hand
-
-                else:
-                    pass
-
-            scores = {key: Hand.value[value] for key, value in hands.items()}
-            scores_display = {str(player): value for player, value in scores.items()}
-            pprint(scores_display)
-            winners = [key for key, value in scores.items() if value == max(scores.values())]
-            print("The winners pre-highcard are:")
-            for x in winners: print(x.name)
-            # 4. (if everyone's best unique hand is a high card)
-            if set([hands[winner] for winner in winners]) == {'HIGH_CARD'}:
-                print("Reached highcard")
-                for player in winners:
-                    # we only check the two hole cards for a high card
-                    hand = player.hand.cards
-                    scores[player] = max([Card.value[x.get_rank()] for x in hand])
-                winners = [key for key, value in scores.items() if value == max(scores.values())]
-                highcard = True
-
-        # returns the winners as well as the winning hands
-        return [winners, [hands[winner] for winner in winners]]
+        return winners
 
     def end(self):
         self.pot = 0

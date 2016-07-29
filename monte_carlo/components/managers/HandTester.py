@@ -3,6 +3,9 @@ from monte_carlo.components.models.Card import Card
 
 """ Testing two hands squaring off, and a get_best_hand function
 
+Note - to test get_best_hand(), you'll have to uncomment anything with TODO above it.
+
+(I have already tested it though!)
 
 """
 
@@ -21,7 +24,21 @@ player B = ['9', '9', '9', '9', 'KING']
 Player A wins, because the four of a kind's cancel and the ace is a stronger high card than the king.
 
 """
-# code goes here
+community_cards = [Card('spades', 'king'), Card('spades', '9'), Card('diamonds', '9'),
+                   Card('hearts', '9'), Card('clubs', '9')]
+hole_a = [Card('clubs', 'ace'), Card('diamonds', '2')]
+hole_b = [Card('clubs', 'king'), Card('hearts', 'king')]
+
+
+# TODO: uncomment to test.
+# # player A
+# print('Player A hand - ')
+# Hand.get_best_hand(community_cards + hole_a).show()
+#
+# # player B
+# print('Player B hand - ')
+# Hand.get_best_hand(community_cards + hole_b).show()
+
 
 
 
@@ -42,18 +59,23 @@ player B = ['KING', 'KING', 'QUEEN', 'QUEEN', '3']
 Player A wins, because in a two-pair situation the tie-breaker is the rank of the first pair.
 
 """
-# code goes here
+community_cards = [Card('spades', 'king'), Card('spades', 'queen'), Card('diamonds', '2'),
+                   Card('hearts', '3'), Card('clubs', '2')]
+hole_a = [Card('clubs', 'ace'), Card('diamonds', 'ace')]
+hole_b = [Card('clubs', 'king'), Card('hearts', 'queen')]
+
+# TODO: uncomment to test.
+# # player A
+# print('Player A hand - ')
+# Hand.get_best_hand(community_cards + hole_a).show()
+#
+# # player B
+# print('Player B hand - ')
+# Hand.get_best_hand(community_cards + hole_b).show()
 
 
 
 
-
-
-""" TEST CASE 3
-
-"""
-
-# code goes here
 
 
 
@@ -368,6 +390,7 @@ if Hand.winner(hand1, hand2) == hand1:
     print("TEST CASE 14: CORRECT")
 else:
     print("ERROR IN TEST CASE 14")
+    Hand.winner(hand1, hand2).show()
 
 
 
@@ -388,6 +411,7 @@ if Hand.winner(hand1, hand2) == hand2:
     print("TEST CASE 15: CORRECT")
 else:
     print("ERROR IN TEST CASE 15")
+    Hand.winner(hand1, hand2).show()
 
 
 
@@ -433,6 +457,46 @@ else:
 
 
 
+""" TEST CASE 18 - royal flush vs three of a kind
+
+Still testing Hand.winner(), but now between different types of hands. This is easier.
+
+hand1 = ['ace of spades', 'king of spades', 'queen of spades', 'jack of spades', '10 of spades']
+hand2 = ['queen', 'queen', 'queen', 'king', '10']
+
+hand1. Royal flush vs three of a king
+
+"""
+hand1 = Hand([Card('spades', 'ace'), Card('spades', 'king'), Card('spades', 'queen'),
+              Card('spades', 'jack'), Card('spades', '10')])
+hand2 = Hand([Card('spades', 'queen'), Card('hearts', 'king'), Card('diamonds', 'queen'),
+              Card('clubs', 'queen'), Card('spades', '10')])
+
+if Hand.winner(hand1, hand2) == hand1:
+    print("TEST CASE 18: CORRECT")
+else:
+    print("ERROR IN TEST CASE 18")
+
+
+""" TEST CASE 19 - flush vs straight
+
+Still testing Hand.winner(), but now between different types of hands. This is easier.
+
+hand1 = ['ace of spades', '2 of spades', 'queen of spades', 'jack of spades', '10 of spades']
+hand2 = ['2', '3', '4', '5', '6']
+
+hand1. hand1, a flush is better than a straight.
+
+"""
+hand1 = Hand([Card('spades', 'ace'), Card('spades', '2'), Card('spades', 'queen'),
+              Card('spades', 'jack'), Card('spades', '10')])
+hand2 = Hand([Card('spades', '2'), Card('hearts', '3'), Card('diamonds', '4'),
+              Card('clubs', '5'), Card('spades', '6')])
+
+if Hand.winner(hand1, hand2) == hand1:
+    print("TEST CASE 19: CORRECT")
+else:
+    print("ERROR IN TEST CASE 19")
 
 
 

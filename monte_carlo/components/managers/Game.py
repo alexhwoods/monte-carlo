@@ -73,23 +73,22 @@ class Game(object):
         self.round.river()
         print("\n")
         self.round.over = True
-        self.round.show_all()
         if self.round.over:
+            print("The hole cards are:")
+            for player in self.players:
+                print(player.name)
+                player.hand.show()
+                print()
+
+            for player in self.players:
+                print(player.name + "'s best hand was: ")
+                player.best_round_hand.show()
+
+                print()
+
             winners = self.round.get_winner()
-            print("The winner of the round is " + str([str(player) for player in winners[0]]))
-            print("Their hands were:")
-            pprint(winners[1])
-            print("They won " + str(self.round.pot))
-
-            to_receive_chips = [player for player in winners[0]]
-            if len(winners) == 1:
-                to_receive_chips[0].win(self.round.pot)
-
-            # if there was a tie and the pot needs to be split among the winners
-            else:
-                share = self.round.pot / len(winners)
-                for player in to_receive_chips:
-                    player.win(share)
+            if len(winners) == 1: print("The winner of the round is " + str(winners[0]))
+            elif len(winners) == 2: print("There was a tie.")
 
     def show(self):
         arr = []
@@ -120,11 +119,6 @@ class Game(object):
 # game.execute_round()
 # game.end_round()
 
-# Testing Session 2 - testing the get_winners() function in round. See GameTester.py
-game2 = Game()
-game2.add_player(Player("Silvia", 400))
-game2.add_player(Player("Randolf", 400))
 
-game2.test_winners()
 
 

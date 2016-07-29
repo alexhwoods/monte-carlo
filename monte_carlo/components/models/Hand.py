@@ -37,17 +37,27 @@ class Hand(object):
         self.ranks = [card.get_rank() for card in self.cards]
         self.suits = [card.get_suit() for card in self.cards]
 
-    # very much # TODO
-    # @staticmethod
-    # def get_best_hand(cards):
-    #     """ Given an array of 7 cards (because texas holdem is played with 2 hole cards and 5 community cards),
-    #         players must choose the best 5 cards combo they can, and then are judged only on that.
-    #
-    #         I'll first write a function that compares two hands and proclaims a winner. I'll then use that
-    #         to get the individuals best hand. (The rest of the logic will be in round.py)
-    #     """
-    #     for combo in list(combinations(cards, 5)):
-    #         # TODO
+    @staticmethod
+    def get_best_hand(cards):
+        """ Given an array of 7 cards (because texas holdem is played with 2 hole cards and 5 community cards),
+            players must choose the best 5 cards combo they can, and then are judged only on that.
+
+            I'll first write a function that compares two hands and proclaims a winner. I'll then use that
+            to get the individuals best hand. (The rest of the logic will be in round.py)
+
+            (tested and works!)
+        """
+        hands = []
+        for combo in list(combinations(cards, 5)):
+            temp = Hand(combo)
+            hands.append(temp)
+
+        best_hand = hands[0]
+        for hand in hands:
+            if Hand.winner(best_hand, hand) == hand:
+                best_hand = hand
+
+        return best_hand
 
     @staticmethod
     def winner(hand1, hand2):
@@ -55,6 +65,8 @@ class Hand(object):
         half done.
 
         If this function returns None, it is a tie, and the players split the pot.
+
+        (Tested and works!)
 
         :param hand1: Hand object
         :param hand2: Hand object
@@ -140,9 +152,17 @@ class Hand(object):
         if hand1.num_pairs() == 2 and hand2.num_pairs() != 2: return hand1
         if hand2.num_pairs() == 2 and hand1.num_pairs() != 2: return hand2
         elif hand1.num_pairs() == 2 and hand2.num_pairs() == 2:
+            vals1, vals2 = [Card.value[x] for x in hand1.get_pairs()], [Card.value[x] for x in hand2.get_pairs()]
+            vals1, vals2 = sorted(vals1), sorted(vals2)
+
+            vals1.reverse()
+            vals2.reverse()
+
             for i in range(2):
-                if Card.value[hand1.get_pairs()[i]] > Card.value[hand2.get_pairs()[i]]: return hand1
-                elif Card.value[hand2.get_pairs()[i]] > Card.value[hand1.get_pairs()[i]]: return hand2
+                if vals1[i] > vals2[i]:
+                    return hand1
+                elif vals2[i] > vals1[i]:
+                    return hand2
 
             return Hand.has_highest_card(hand1, hand2)
 
@@ -163,7 +183,7 @@ class Hand(object):
         return Hand.has_highest_card(hand1, hand2)
 
 
-    # finally, a reliable and safe method for this...
+    # tested and works
     @staticmethod
     def has_highest_card(hand1, hand2):
         for i in range(5):
@@ -208,6 +228,7 @@ class Hand(object):
         return self.ranks[0]
 
     # pairs are done a little differently than three or four of a kind, since there can be 1 or 2 of them
+    # doesn't return a sorted list! The values are strings not int in the list
     def get_pairs(self):
         pairs = [f for f in set(self.ranks) if self.ranks.count(f) == 2]
         return pairs

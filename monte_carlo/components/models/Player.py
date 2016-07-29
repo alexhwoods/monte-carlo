@@ -30,5 +30,5 @@ class Player(object):
         self.chips += amount
 
     def __str__(self):
-        string = self.name + ", " + str(self.chips)
+        string = self.name + " (" + str(self.chips) + ')'
         return string
