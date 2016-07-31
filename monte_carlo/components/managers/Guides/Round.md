@@ -21,12 +21,15 @@ derived from the game, however, round is not a subclass of game. Within
  a round, each player has 2 hole cards.
 
 ## How it works:
-A round is one complete hand. Within a round there are 4 betting rounds.
+A round is one complete hand. Within a round there are 4 betting stages.
 The pre-flop, post-flop, post-turn, and the showdown.
+
+Notice the important distinction between rounds and stages. There are 
+four stages in a round, and an unlimited number of rounds in a game.
 
 
 1. ### The Pre-flop ###
-All players are dealt **hole cards**. The first betting round 
+All players are dealt **hole cards**. The first betting stage 
 ("pre-flop") begins. The player left of the dealer *(important 
 to keep in mind when doing the GUI)* has to bet first. He can 
     - **call** - meeting the minimum bet (which we'll set, or let 
@@ -34,7 +37,7 @@ to keep in mind when doing the GUI)* has to bet first. He can
     -  **fold** - decide not to play his hand (if all players fold 
     except one, the remaining player gets all the chips in the pot) 
     -  **raise** - bet not only the table minimum, but something extra. 
-    All following players in the round must bet at minimum this new 
+    All following players in this stage must bet at minimum this new 
     amount. 
     -  **go all-in** - Put all his chips in the pot. This is now the 
     new betting minimum.
@@ -43,16 +46,16 @@ to keep in mind when doing the GUI)* has to bet first. He can
     for simplicity's sake. 
     
 2. ### The Flop ### 
-Once the pre-flop betting round is complete, the dealer reveals 
+Once the pre-flop betting stage is complete, the dealer reveals 
 3 cards to the middle of the table. This is called the flop. Another 
-round of betting, the **post-flop** then occurs. The first better 
+stage of betting, the **post-flop** then occurs. The first better 
 (the first still active player left of the dealer) has a new option, 
 to check.
-    - **check** - to pass on the first bet of the round to the next 
+    - **check** - to pass on the first bet of the stage to the next 
     player. 
     
-    If all players in a betting round check, then the 
-    post-flop betting round is complete. However, if the first 
+    If all players in a betting stage check, then the 
+    post-flop betting stage is complete. However, if the first 
     player checks and the next player bets, the betting goes all the 
     way around the circle and ends with the original first player, 
     meaning in this case, the original first player would still have to 
@@ -60,13 +63,13 @@ to check.
    
 3. ### The Turn ###
 Another card is then dealt to the middle of the table. There are now
-4 community cards. Another betting round occurs, called the 
-**post-turn**. The post-turn betting round is identical to the post-flop
-betting round.
+4 community cards. Another betting stage occurs, called the 
+**post-turn**. The post-turn betting stage is identical to the post-flop
+betting stage.
 
 4. ### The River ###
 The final community card, called the river is dealt to the middle of 
-the table. The final betting round, called the **showdown** occurs. The
+the table. The final betting stage, called the **showdown** occurs. The
 players then reveal their cards, and the winner is the one with the hand
 with the highest ranking. He gets all the chips in the pot. The round
 is now over.

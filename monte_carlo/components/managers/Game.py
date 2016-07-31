@@ -1,37 +1,102 @@
 # Author Alex Woods <alexhwoods@gmail.com>
 from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.models.Player import Player
+from monte_carlo.components.managers.Round import Round
 from pprint import pprint
 
 class Game(object):
 
-    def __init__(self):
+    def __init__(self, table_min=10):
         self.deck = Deck()
         self.players = []
         self.pot = 0
+        self.table_min = table_min
+        self.round = None
+        self.round_num = 0
 
     def add_player(self, player):
         self.players.append(player)
 
-    def start_round(self):
+    def get_players(self):
+        return self.players
 
-        for i in self.players:
-            self.deck.draw(2)
+    def end_round(self):
+        cards = self.round.community_cards
+        for player in self.players:
+            for card in player.hand.cards: cards.append(card)
+            player.folded = False
 
+        self.deck.push_bottom(cards)
+        if not self.deck.is_full():
+            "Delete this if you never reach it"
+            print("Reaching a problem statement")
+            self.deck = Deck()
+
+    def test_winners(self):
+        self.deck.shuffle()
+        self.round = Round(self)
+        self.round.deal_hole()
+        self.round.flop()
+        self.round.turn()
+        self.round.river()
+        print("\n")
+        self.round.over = True
+        if self.round.over:
+            print("The hole cards are:")
+            for player in self.players:
+                print(player.name)
+                player.hand.show()
+                print()
+
+            for player in self.players:
+                print(player.name + "'s best hand was: ")
+                player.best_hand.show()
+
+                print()
+
+            winners = self.round.get_winner()
+            if len(winners) == 1: print("The winner of the round is " + str(winners[0]))
+            elif len(winners) == 2: print("There was a tie.")
+
+    def run(self):
+        self.deck.shuffle()
+        self.round = Round(self)
+        self.round_num += 1
+
+        self.round.deal_hole()
+        self.round.pre_flop()
+        print()
+
+        self.round.flop()
+        self.round.post_flop()
+        print()
+
+        self.round.turn()
+        self.round.post_turn()
+        print()
+
+        self.round.river()
+        self.round.showdown()
+
+        if self.round.over:
+            winners = self.round.get_winner()
+            print("The winner of the round is " + str([str(player) for player in winners]))
+            print("The overall return of chips to players is: ")
+            self.round.print_winnings()
 
     def show(self):
         arr = []
         for i in self.players:
             arr.append(str(i))
         pprint(arr)
+        print("The minimum table bet is " + str(self.table_min) + " chips.")
         print("\n")
+        if self.round is not None:
+            self.round.show_all()
 
 
 
-# Testing
 
-game = Game()
-game.add_player(Player("Carla", 200))
-game.show()
+
+
 
 
