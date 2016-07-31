@@ -31,18 +31,18 @@ class Deck(object):
     """
 
     def __init__(self):
-        self.cards = collections.deque()
+        self._cards = collections.deque()
         for i,j in product(Card.suits, Card.ranks):
-            self.cards.append(Card(i, j))
+            self._cards.append(Card(i, j))
 
     def draw_one(self):
-        return self.cards.pop()
+        return self._cards.pop()
 
     # to draw multiple cards
-    def draw_many(self, num_cards=1):
+    def draw_many(self, num__cards=1):
         arr = []
-        for i in range(num_cards):
-            arr.append(self.cards.pop())
+        for i in range(num__cards):
+            arr.append(self._cards.pop())
 
         return arr
 
@@ -53,17 +53,23 @@ class Deck(object):
             card = [card]
 
         for i in range(len(card)):
-            self.cards.appendleft(card[i])
+            self._cards.appendleft(card[i])
 
     def shuffle(self):
-        random.shuffle(self.cards)
+        random.shuffle(self._cards)
 
     def is_full(self):
-        return set(self.cards) == set([Card(i,j) for i, j in product(Card.suits, Card.ranks)])
+        return set(self._cards) == set([Card(i,j) for i, j in product(Card.suits, Card.ranks)])
+    
+    def __getitem__(self, position):
+        return self._cards[position]
+
+    def __len__(self):
+        return len(self._cards)
 
     def show(self):
         arr = []
-        for i in self.cards:
+        for i in self._cards:
             arr.append(str(i))
         print("Starting at the bottom of the deck...")
         pprint(arr)

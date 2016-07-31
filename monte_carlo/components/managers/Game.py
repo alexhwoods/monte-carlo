@@ -1,12 +1,11 @@
 # Author Alex Woods <alexhwoods@gmail.com>
 from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.models.Player import Player
 from monte_carlo.components.managers.Round import Round
 from pprint import pprint
 
 class Game(object):
 
-    def __init__(self, table_min=0):
+    def __init__(self, table_min=10):
         self.deck = Deck()
         self.players = []
         self.pot = 0
@@ -19,38 +18,6 @@ class Game(object):
 
     def get_players(self):
         return self.players
-
-    def start_round(self):
-        self.deck.shuffle()
-        self.round = Round(self.deck, self.get_players(), self.table_min)
-        self.round_num += 1
-
-    def execute_round(self):
-        self.round.deal_hole()
-        self.round.pre_flop()
-        self.round.flop()
-        self.round.post_flop()
-        self.round.turn()
-        self.round.post_turn()
-        self.round.river()
-        self.round.showdown()
-
-        if self.round.over:
-            winners = self.round.get_winner()
-            print("The winner of the round is " + str([str(player) for player in winners[0]]))
-            print("Their hands were:")
-            pprint(winners[1])
-            print("They won " + str(self.round.pot))
-
-            to_recieve_chips = [player for player in winners[0]]
-            if len(winners) == 1:
-                to_recieve_chips[0].win(self.round.pot)
-
-            # if there was a tie and the pot needs to be split among the winners
-            else:
-                share = self.round.pot / len(winners)
-                for player in to_recieve_chips:
-                    player.win(share)
 
     def end_round(self):
         cards = self.round.community_cards
@@ -66,7 +33,7 @@ class Game(object):
 
     def test_winners(self):
         self.deck.shuffle()
-        self.round = Round(self.deck, self.get_players(), self.table_min)
+        self.round = Round(self)
         self.round.deal_hole()
         self.round.flop()
         self.round.turn()
@@ -82,13 +49,39 @@ class Game(object):
 
             for player in self.players:
                 print(player.name + "'s best hand was: ")
-                player.best_round_hand.show()
+                player.best_hand.show()
 
                 print()
 
             winners = self.round.get_winner()
             if len(winners) == 1: print("The winner of the round is " + str(winners[0]))
             elif len(winners) == 2: print("There was a tie.")
+
+    def run(self):
+        self.deck.shuffle()
+        self.round = Round(self)
+        self.round_num += 1
+
+        self.round.deal_hole()
+        self.round.pre_flop()
+        print()
+
+        self.round.flop()
+        self.round.post_flop()
+        print()
+
+        self.round.turn()
+        self.round.post_turn()
+        print()
+
+        self.round.river()
+        self.round.showdown()
+
+        if self.round.over:
+            winners = self.round.get_winner()
+            print("The winner of the round is " + str([str(player) for player in winners]))
+            print("The overall return of chips to players is: ")
+            self.round.print_winnings()
 
     def show(self):
         arr = []
@@ -102,22 +95,7 @@ class Game(object):
 
 
 
-# Testing Session 1
 
-# game = Game()
-# carla = Player("Carla", 200)
-# game.add_player(carla)
-#
-# bob = Player("Bob", 350)
-# game.add_player(Player("Bob", 350))
-#
-# carlos = Player("Carlos", 300)
-# game.add_player(carlos)
-#
-# game.show()
-# game.start_round()
-# game.execute_round()
-# game.end_round()
 
 
 

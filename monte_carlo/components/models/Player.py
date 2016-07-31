@@ -8,7 +8,7 @@ class Player(object):
         self.name = name
         self.chips = chips
         self.hand = None
-        self.best_round_hand = None
+        self.best_hand = None
         self.current_bet = None
         self.folded = False
         self.computer = computer
@@ -16,11 +16,15 @@ class Player(object):
     def set_hand(self, arr):
         self.hand = Hand(arr)
 
-    def bet(self, amount=0):
-        if amount > self.chips:
-            amount = self.chips
-        self.current_bet = amount
-        self.chips = self.chips - amount
+    # def bet(self, amount=0):
+    #     if amount > self.chips:
+    #         amount = self.chips
+    #     self.current_bet = amount
+    #     self.chips = self.chips - amount
+
+    # gonna keep the betting logic in BetManager
+    def set_chips(self, amount):
+        self.chips = amount
 
     def fold(self):
         self.folded = True

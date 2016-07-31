@@ -285,6 +285,13 @@ class Hand(object):
     def royal_flush(self):
         return self.straight_flush() and self.high_card() == 'ACE'
 
+    def __getitem__(self, position):
+        return self.cards[position]
+
+    def __add__(self, other):
+        cards = self.cards + other.cards
+        return cards
+
     def show(self, ascending=False):
         arr = []
         for i in self.cards:
