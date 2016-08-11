@@ -31,31 +31,20 @@ class Game(object):
             print("Reaching a problem statement")
             self.deck = Deck()
 
-    def test_winners(self):
-        self.deck.shuffle()
-        self.round = Round(self)
-        self.round.deal_hole()
-        self.round.flop()
-        self.round.turn()
-        self.round.river()
-        print("\n")
-        self.round.over = True
-        if self.round.over:
-            print("The hole cards are:")
-            for player in self.players:
-                print(player.name)
-                player.hand.show()
-                print()
-
-            for player in self.players:
-                print(player.name + "'s best hand was: ")
-                player.best_hand.show()
-
-                print()
-
-            winners = self.round.get_winner()
-            if len(winners) == 1: print("The winner of the round is " + str(winners[0]))
-            elif len(winners) == 2: print("There was a tie.")
+# TODO eventually delete this, but for now I'll keep them, just in case we need to quick test something. 
+    # def test_betting(self):
+    #     self.round = Round(self)    # constructor called right here
+    #     self.deck.shuffle()
+    #     self.round.deal_hole()
+    #     self.round.flop()
+    #     self.round.turn()
+    #     self.round.river()
+    #     self.round.showdown()
+    #
+    #     if self.round.over:
+    #         print("Betting info: ")
+    #         self.round.bet_manager.status()
+    #         pprint({player.name: chips for player, chips in self.round.bet_manager.chips_at_beginning.items()})
 
     def run(self):
         self.deck.shuffle()
@@ -78,10 +67,7 @@ class Game(object):
         self.round.showdown()
 
         if self.round.over:
-            winners = self.round.get_winner()
-            print("The winner of the round is " + str([str(player) for player in winners]))
-            print("The overall return of chips to players is: ")
-            self.round.print_winnings()
+            self.round.bet_manager.distribute()
 
     def show(self):
         arr = []
