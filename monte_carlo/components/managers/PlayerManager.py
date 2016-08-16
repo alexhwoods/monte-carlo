@@ -8,6 +8,7 @@ players = []
 def create(name, chips):
     player = Player(name, chips)
     players.append(player)
+    return player
 
 
 def getByID(id):

@@ -5,12 +5,8 @@ from collections import namedtuple
 import math
 from pprint import pprint
 
-# these things rock, it's like a baby object
-Surplus = namedtuple('Surplus', ['player', 'amount'])
-Bet = namedtuple('Bet', ['player', 'amount'])
 
-
-class BetManager(object):
+class BetManager:
     ''' Function summary:
             getOptions(player) - returns betting options for a player
             getRaiseLimit(player) - returns the maximum amount a player can raise
@@ -24,9 +20,9 @@ class BetManager(object):
 
     betting_options = ['CALL', 'CHECK', 'RAISE', 'FOLD']
 
-    def __init__(self, round):
-        self.round = round
-        self.players = round.players
+    def __init__(self, game):
+        self.game = game
+        self.players = game.players
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
 
@@ -130,10 +126,12 @@ class BetManager(object):
                     new_pot = Pot(self.eligibles, new_max)
                     self.pots.append(new_pot)
 
+    # internal
     def setRaise(self, player):
         self.matched_raise = {player: False for player in self.players if not player.folded}
         self.matched_raise[player] = True
 
+    # TODO - not sure what to do with this
     def pot_folded(self, pot):
         fold_summary = []
         if pot in self.pots:
@@ -145,6 +143,7 @@ class BetManager(object):
         else:
             return None
 
+    # internal, pot stuff is internal
     def getPotWinner(self, pot):
         # if all the players fold, we don't need to compare cards to see who wins, we just pick the one who
         # hasn't folded yet.
@@ -154,7 +153,8 @@ class BetManager(object):
                     return [player]
 
         for player in pot.players:
-            player.best_hand = Hand.get_best_hand(Hand(self.round.community_cards) + player.hand)
+            round = self.game.getCurrentRound()
+            player.best_hand = Hand.get_best_hand(Hand(round.community_cards) + player.hand)
 
         winners = [pot.players[0]]
         best_hand = winners[0].best_hand
@@ -173,7 +173,19 @@ class BetManager(object):
 
         return winners
 
+    def getAllWinners(self):
+        dict = {pot: [] for pot in self.pots}
+        for pot in self.pots:
+            dict[pot] = self.getPotWinner(pot)
+
+        raise_status = self.getRaiseStatus()
+        if False in raise_status.values():
+            return None
+        else:
+            return dict
+
     def getRaiseStatus(self):
+        self.matched_raise = {player: False for player in self.players if not player.folded}
         return self.matched_raise
 
     def getPotStatus(self):
@@ -192,30 +204,30 @@ class BetManager(object):
                 winner.chips += pot.get_amount()
 
                 if pot == self.pots[0]:
-                    print(winner.name + ' wins the main pot.')
+                    # print(winner.name + ' wins the main pot.')
                 else:
-                    print(winner.name + ' wins side pot ' + str(num))
+                    # print(winner.name + ' wins side pot ' + str(num))
                     num += 1
 
             else:
                 share = pot.get_amount() / float(len(winners))
                 for winner in winners:
                     winner.chips += share
-                    print(winner.name)
-                if pot == self.pots[0]:
-                    print('have won the main pot.')
-                else:
-                    print(' wins side pot ' + str(num))
-                    num += 1
+                #     # print(winner.name)
+                # if pot == self.pots[0]:
+                #     print('have won the main pot.')
+                # else:
+                #     print(' wins side pot ' + str(num))
+                #     num += 1
 
-    # internal
+    # internal, NUE
     def done_by_fold(self):
         fold_summary = [player.folded for player in self.players]
 
         # if there is only one player who has still not folded
         return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
 
-    # internal
+    # internal, UE
     def reset(self):
         self.minimum_bet = 0
         self.set_min()
@@ -250,176 +262,6 @@ class BetManager(object):
         else:
             return False
         
-        
-    ''' ********************************* All API methods are above *********************************************** '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ''' The below method simulates a betting round. This is the hardest thing to simulate. Here is the logic:
-
-        - if everyone but one player has folded, stop.
-
-
-    Note - a lot of the crap in this method is dealing with user input, which will be more complex and complete
-           when we do the GUI.
-
-    '''
-    # # ********************************* Warning - this function is not ideal.. **************************************
-    # # command line betting round, if we make a gui, we'd make it in a controller. Note that I'm not going be too
-    # # robust with this because we're going to wire it up soon anyway. It's just a proof of concept kind of thing
-    def cl_betting_round(self, preflop=False):
-        if self.done_by_fold(): pass
-        print("Starting betting...")
-
-        matched_raise = {player: True for player in self.players}
-        for player in self.players:
-            if self.done_by_fold(): break
-            if not player.folded:
-                print('Hi ' + str(player.name) + '. Your cards are:')
-                player.hand.show()
-
-                valid_bet, fold = False, False
-                while not valid_bet and not fold:
-                    if preflop and player == self.players[0]:
-                        # I only want to print this for the first player...
-                        print("This is the first betting round. To bet the minimum of " + str(self.minimum_bet) +
-                              ", type CHECK.")
-                    else:
-                        print("Current bet: " + str(self.current_bet) + " chips")
-
-                    inp = input('\n Enter \"CHECK\" to check or call, \"RAISE\" to raise, and \"FOLD\" to fold. If ' +
-                                 'you would like to see your particular options, type \"OPTIONS\".')
-
-                    # assure that if the player enters a bad option, they won't be passed into a clause they shouldn't
-                    if inp.upper() not in self.options(player): inp = 'nonsense'
-                    if inp.upper() == 'CHECK':
-                        if preflop:
-                            if self.chips[player] > self.minimum_bet:
-                                amount = max(self.minimum_bet, self.current_bet)
-                            else:
-                                amount = self.chips[player]
-                        else:
-                            amount = self.current_bet
-
-                        # if they can't match the current bet
-                        if not self.is_valid_bet(player, amount):
-                            amount = self.chips[player]
-
-                        self.bet(player, amount)
-                        valid_bet = True
-                        self.current_bet = max(amount, self.current_bet)
-                        matched_raise[player] = True
-                        # valid_bet = self.is_valid_bet(player, amount)
-
-                    elif inp.upper() == 'RAISE':
-                        if preflop and self.current_bet == 0:
-                            self.current_bet = self.minimum_bet
-
-                        # could be in can_raise
-                        if not self.can_raise(player):
-                            print("It seems you don't have enough to raise, pick another option.")
-                            pass
-
-                        raise_amount = 0
-                        while not valid_bet and self.can_raise(player):
-                            raise_amount = int(input('The current bet is ' + str(self.current_bet) + ' chips. Enter by how ' +
-                                                    'much would you like to raise it:'))
-                            valid_bet = self.is_valid_bet(player, self.current_bet + raise_amount)
-
-                        matched_raise = {player: False for player in self.players}
-                        matched_raise[player] = True
-                        self.current_bet += raise_amount
-                        self.bet(player, self.current_bet)
-
-
-                    elif inp.upper() == 'FOLD':
-                        player.fold()
-                        fold = True
-
-                    elif inp.upper() == 'OPTIONS':
-                        for option in self.options(player): print(option)
-
-                    else:
-                        # There must have been bad input, they'll have to try again!
-                        pass
-
-        for player in self.players:
-            if self.done_by_fold(): break
-            if not matched_raise[player]:
-                input_invalid = True
-                while input_invalid:
-                    inp = input(str(player.name) + "! Would you like to match the current bet of " +
-                                str(self.current_bet) +
-                                "? You've already put in " + str(self.bets[player]) + ", so it will require " +
-                                "either " + str(self.current_bet - self.bets[player]) + ", or all your chips," +
-                                " whichever is smaller." +
-                                " Type 'yes' to fight on, 'no' to fold:")
-                    if inp.upper() == 'YES':
-                        # add the additional amount to their bet
-                        if self.is_valid_bet(player, self.current_bet - self.bets[player]):
-                            self.bet(player, self.current_bet - self.bets[player])
-                            matched_raise[player] = True
-
-                        # if they can't make the full bet
-                        else:
-                            # then they'll have to bet the rest of their chips
-                            self.bet(player, self.chips[player])
-                        input_invalid = False
-                    elif inp.upper() == 'NO':
-                        player.fold()
-                        input_invalid = False
-                    else:
-                        pass
-
-        # I guess now it's time to test this thing...
-                    
-    # This method is just for testing
-    def bet_tester(self, players_dict, bets):
-        self.players = players_dict.keys()
-        self.chips = players_dict
-
-        ''' bets is of the form {A:150, B:150, C:100}, to simulate a betting round.
-        '''
-        self.status()
-        for player, amount in bets.items():
-            self.bet(player, amount)
-
-        self.status()
-        
-
-
-
-
-    # For testing only
-    def status(self):
-        num = 1
-        for pot in self.pots:
-            if pot == self.pots[0]:
-                print("Main pot: ")
-                print(pot)
-                print()
-            else:
-                print("Side pot " + str(num) + ": ")
-                print(pot)
-                print()
-                num += 1
-        print("Chip count - ")
-        pprint({player.name: chips for player, chips in self.chips.items()})
-        print()
-
-    def can_raise(self, player):
-        return self.chips[player] > self.current_bet
 
 
 

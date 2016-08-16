@@ -11,6 +11,7 @@ def createGame():
     # TODO - eventually set this up to handle a table min
     game = Game()
     games.append(game)
+    return game
 
 
 def getPlayers(gameID):
@@ -41,8 +42,13 @@ def joinGame(playerID, gameID):
 
 def endGame(gameID):
     game = getByID(gameID)
-    games.remove(game)
-    past_games.append(game)
+    if game in games:
+        game.over = True
+        games.remove(game)
+        past_games.append(game)
+        return 'Success'
+    else:
+        return 'Failure'
 
 
 
