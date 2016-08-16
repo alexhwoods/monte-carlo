@@ -1,4 +1,4 @@
-from monte_carlo.components.managers.Game import Game
+from monte_carlo.components.models.Game import Game
 from monte_carlo.components.models.Player import Player
 
 game = Game()

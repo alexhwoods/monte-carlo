@@ -11,6 +11,16 @@ Bet = namedtuple('Bet', ['player', 'amount'])
 
 
 class BetManager(object):
+    ''' Function summary:
+            getOptions(player) - returns betting options for a player
+            getRaiseLimit(player) - returns the maximum amount a player can raise
+            fold(player)
+            bet(player, amount)
+            setRaise(player) - used in bet(), simply updates the current bet and who's matched it
+            
+    
+    
+    '''
 
     betting_options = ['CALL', 'CHECK', 'RAISE', 'FOLD']
 
@@ -23,10 +33,10 @@ class BetManager(object):
         # there is initially one pot, namely, the main pot.
         self.pots = [Pot(self.players, min(self.chips.values()))]
 
-        # TODO - the players that should go here are the ones who at the beginning of a BETTING ROUND, they have
-        # TODO - more chips than the sum of the maximums of the pots.
         self.eligibles = self.players
         self.update_eligibles()
+
+        self.matched_raise = {player: True for player in self.players}
 
 
         self.minimum_bet = 0
@@ -36,12 +46,15 @@ class BetManager(object):
         self.bets = {player: 0 for player in self.players}
         self.winnings = {player: 0 for player in self.players}
 
-    def options(self, player):
+    def startBettingRound(self):
+        self.current_bet = 0
+        self.matched_raise = {player: False for player in self.players if not player.folded}
+
+    def getOptions(self, player):
         opts = []
         if self.chips[player] > self.current_bet:
             opts.append('CHECK')
             opts.append('RAISE')
-            # opts.append('RAISE UP TO ' + str(self.chips[player] - self.current_bet) + ' CHIPS')
             opts.append('FOLD')
 
         elif self.chips[player] == self.current_bet:
@@ -53,21 +66,33 @@ class BetManager(object):
             opts.append('FOLD')
 
         return opts
+    
+    def getRaiseLimit(self, player):
+        if 'RAISE' not in self.getOptions(player):
+            return None
+        else:
+            return self.chips[player] - self.current_bet
+        
+    def fold(self, player):
+        player.fold()
 
     ''' This method does exactly what it says, bets. No more, no less. Raises need to be dealt with separately,
         game flow needs to be dealt with separately.
 
         Note that we will take extra care to only present the user with valid bet options.
     '''
-    def bet(self, player, amount):
+    def bet(self, player, amount, is_raise=False):
+
+        if is_raise:
+            self.setRaise(player)
+            self.current_bet = amount
+
+        if amount == self.current_bet or player.chips - amount == 0:
+            self.matched_raise[player] = True
 
         while amount > 0:
-            # self.status()
             for pot in self.pots:
-                # this needs to remain really updated
                 self.update_eligibles()
-
-
                 # Clause A - if the pot is not maxed and the player hasn't bet his max amount in the current pot
                 if not pot.is_maxed and pot.counts[player] < pot.max_per_player:
                     # A.1
@@ -105,38 +130,114 @@ class BetManager(object):
                     new_pot = Pot(self.eligibles, new_max)
                     self.pots.append(new_pot)
 
+    def setRaise(self, player):
+        self.matched_raise = {player: False for player in self.players if not player.folded}
+        self.matched_raise[player] = True
 
+    def pot_folded(self, pot):
+        fold_summary = []
+        if pot in self.pots:
+            fold_summary = [player.folded for player in pot.players]
 
-    # This method is just for testing
-    def bet_tester(self, players_dict, bets):
-        self.players = players_dict.keys()
-        self.chips = players_dict
+            # if there is only one player who has still not folded
+            return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
 
-        ''' bets is of the form {A:150, B:150, C:100}, to simulate a betting round.
-        '''
-        self.status()
-        for player, amount in bets.items():
-            self.bet(player, amount)
+        else:
+            return None
 
-        self.status()
+    def getPotWinner(self, pot):
+        # if all the players fold, we don't need to compare cards to see who wins, we just pick the one who
+        # hasn't folded yet.
+        if BetManager.pot_folded(pot):
+            for player in pot.players:
+                if not player.folded:
+                    return [player]
 
-    # For testing only
-    def status(self):
+        for player in pot.players:
+            player.best_hand = Hand.get_best_hand(Hand(self.round.community_cards) + player.hand)
+
+        winners = [pot.players[0]]
+        best_hand = winners[0].best_hand
+        for player in pot.players:
+            if Hand.winner(best_hand, player.best_hand) == player.best_hand:
+                # if there is a clear winner we need to reset the winners array, because maybe there was a tie
+                # between two players and a third player beat one of them (and thus both of them)
+                winners = [player]
+                best_hand = player.best_hand
+
+            # if there is a tie!
+            elif Hand.winner(best_hand, player.best_hand) is None and player not in winners:
+                winners.append(player)
+            else:
+                pass
+
+        return winners
+
+    def getRaiseStatus(self):
+        return self.matched_raise
+
+    def getPotStatus(self):
+        return [pot.counts for pot in self.pots]
+
+    def getFoldStatus(self):
+        return {player: player.folded for player in self.players}
+
+    # internal
+    def distribute(self):
         num = 1
         for pot in self.pots:
-            if pot == self.pots[0]:
-                print("Main pot: ")
-                print(pot)
-                print()
-            else:
-                print("Side pot " + str(num) + ": ")
-                print(pot)
-                print()
-                num += 1
-        print("Chip count - ")
-        pprint({player.name: chips for player, chips in self.chips.items()})
-        print()
+            winners = self.getPotWinner(pot)
+            if len(winners) == 1:
+                winner = winners[0]
+                winner.chips += pot.get_amount()
 
+                if pot == self.pots[0]:
+                    print(winner.name + ' wins the main pot.')
+                else:
+                    print(winner.name + ' wins side pot ' + str(num))
+                    num += 1
+
+            else:
+                share = pot.get_amount() / float(len(winners))
+                for winner in winners:
+                    winner.chips += share
+                    print(winner.name)
+                if pot == self.pots[0]:
+                    print('have won the main pot.')
+                else:
+                    print(' wins side pot ' + str(num))
+                    num += 1
+
+    # internal
+    def done_by_fold(self):
+        fold_summary = [player.folded for player in self.players]
+
+        # if there is only one player who has still not folded
+        return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
+
+    # internal
+    def reset(self):
+        self.minimum_bet = 0
+        self.set_min()
+
+        self.current_bet = 0
+        self.bets = {player: 0 for player in self.players}  # used in constructor, no need to call elsewhere
+
+    # internal and stays in this class
+    def set_min(self):
+        # initialize to some players chip count, a number definitely not smaller than min
+        min_chips = self.chips[self.players[0]]
+        for amount in self.chips.values():
+            min_chips = min(math.ceil(0.5 * amount), self.round.table_min)
+
+        self.minimum_bet = min_chips
+
+    # internal and within class only (to occur at the beginning of each betting round)
+    def update_eligibles(self):
+        self.eligibles = [player for player in self.players
+                          if self.chips_at_beginning[player] > sum([pot.max_per_player for pot in self.pots])]
+
+    # internal
     def is_valid_bet(self, player, amount):
         # if the player has enough to match the current bet and doesn't bet more than he has
         if self.chips[player] >= self.current_bet and amount <= self.chips[player]:
@@ -148,22 +249,22 @@ class BetManager(object):
 
         else:
             return False
+        
+        
+    ''' ********************************* All API methods are above *********************************************** '''
 
-    def can_raise(self, player):
-        return self.chips[player] > self.current_bet
 
-    def done_by_fold(self):
-        fold_summary = [player.folded for player in self.players]
 
-        # if there is only one player who has still not folded
-        return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
 
-    @staticmethod
-    def pot_folded(pot):
-        fold_summary = [player.folded for player in pot.players]
 
-        # if there is only one player who has still not folded
-        return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
+
+
+
+
+
+
+
+
 
     ''' The below method simulates a betting round. This is the hardest thing to simulate. Here is the logic:
 
@@ -282,84 +383,49 @@ class BetManager(object):
                         pass
 
         # I guess now it's time to test this thing...
+                    
+    # This method is just for testing
+    def bet_tester(self, players_dict, bets):
+        self.players = players_dict.keys()
+        self.chips = players_dict
 
-    def pot_winner(self, pot):
-        # if all the players fold, we don't need to compare cards to see who wins, we just pick the one who
-        # hasn't folded yet.
-        if BetManager.pot_folded(pot):
-            for player in pot.players:
-                if not player.folded:
-                    return [player]
+        ''' bets is of the form {A:150, B:150, C:100}, to simulate a betting round.
+        '''
+        self.status()
+        for player, amount in bets.items():
+            self.bet(player, amount)
 
-        for player in pot.players:
-            player.best_hand = Hand.get_best_hand(Hand(self.round.community_cards) + player.hand)
+        self.status()
+        
 
-        winners = [pot.players[0]]
-        best_hand = winners[0].best_hand
-        for player in pot.players:
-            if Hand.winner(best_hand, player.best_hand) == player.best_hand:
-                # if there is a clear winner we need to reset the winners array, because maybe there was a tie
-                # between two players and a third player beat one of them (and thus both of them)
-                winners = [player]
-                best_hand = player.best_hand
 
-            # if there is a tie!
-            elif Hand.winner(best_hand, player.best_hand) is None and player not in winners:
-                winners.append(player)
-            else:
-                pass
 
-        return winners
 
-    def distribute(self):
+    # For testing only
+    def status(self):
         num = 1
         for pot in self.pots:
-            winners = self.pot_winner(pot)
-            if len(winners) == 1:
-                winner = winners[0]
-                winner.chips += pot.get_amount()
-
-                if pot == self.pots[0]:
-                    print(winner.name + ' wins the main pot.')
-                else:
-                    print(winner.name + ' wins side pot ' + str(num))
-                    num += 1
-
+            if pot == self.pots[0]:
+                print("Main pot: ")
+                print(pot)
+                print()
             else:
-                share = pot.get_amount() / float(len(winners))
-                for winner in winners:
-                    winner.chips += share
-                    print(winner.name)
-                if pot == self.pots[0]:
-                    print('have won the main pot.')
-                else:
-                    print(' wins side pot ' + str(num))
-                    num += 1
+                print("Side pot " + str(num) + ": ")
+                print(pot)
+                print()
+                num += 1
+        print("Chip count - ")
+        pprint({player.name: chips for player, chips in self.chips.items()})
+        print()
 
-    def reset(self):
-        self.minimum_bet = 0
-        self.set_min()
+    def can_raise(self, player):
+        return self.chips[player] > self.current_bet
 
-        self.current_bet = 0
-        self.bets = {player: 0 for player in self.players}  # used in constructor, no need to call elsewhere
 
-    ''' The following are methods that are used internally in this class, and should not be used
-        elsewhere.
-    '''
-    def set_min(self):
-        # initialize to some players chip count, a number definitely not smaller than min
-        min_chips = self.chips[self.players[0]]
-        for amount in self.chips.values():
-            min_chips = min(math.ceil(0.5 * amount), self.round.table_min)
 
-        self.minimum_bet = min_chips
-        
-    # to occur at the beginning of each betting round 
-    def update_eligibles(self):
-        self.eligibles = [player for player in self.players 
-                                if self.chips_at_beginning[player] > sum([pot.max_per_player for pot in self.pots])]
-        
-        
+
+
+
     
 
 

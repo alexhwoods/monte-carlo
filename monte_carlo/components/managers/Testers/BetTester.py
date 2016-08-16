@@ -1,13 +1,7 @@
-from monte_carlo.components.models.Card import Card
-from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.models.Hand import Hand
-from monte_carlo.components.models.Player import Player
-from monte_carlo.components.models.Pot import Pot
 from monte_carlo.components.managers.BetManager import BetManager
-from monte_carlo.components.managers.Game import Game
-from monte_carlo.components.managers.Round import Round
-from pprint import pprint
-
+from monte_carlo.components.models.Game import Game
+from monte_carlo.components.models.Player import Player
+from monte_carlo.components.models.Round import Round
 
 A = Player("A", 300)
 B = Player("B", 200)

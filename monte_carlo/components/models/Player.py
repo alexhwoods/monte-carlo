@@ -1,4 +1,5 @@
 # Author Alex Woods <alexhwoods@gmail.com>
+import uuid
 from monte_carlo.components.models.Hand import Hand
 
 
@@ -6,6 +7,7 @@ class Player(object):
 
     def __init__(self, name, chips, computer=False):
         self.name = name
+        self.id = uuid.uuid4()
         self.chips = chips
         self.hand = None
         self.best_hand = None
@@ -15,12 +17,6 @@ class Player(object):
 
     def set_hand(self, arr):
         self.hand = Hand(arr)
-
-    # def bet(self, amount=0):
-    #     if amount > self.chips:
-    #         amount = self.chips
-    #     self.current_bet = amount
-    #     self.chips = self.chips - amount
 
     # gonna keep the betting logic in BetManager
     def set_chips(self, amount):
@@ -36,3 +32,7 @@ class Player(object):
     def __str__(self):
         string = self.name + " (" + str(self.chips) + ')'
         return string
+
+
+
+
