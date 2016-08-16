@@ -1,11 +1,15 @@
 # Author Alex Woods <alexhwoods@gmail.com>
-from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.managers.Round import Round
+import uuid
 from pprint import pprint
+from monte_carlo.components.models.Deck import Deck
+from monte_carlo.components.models.Round import Round
+
 
 class Game(object):
 
     def __init__(self, table_min=10):
+        self.id = uuid.uuid4()
+
         self.deck = Deck()
         self.players = []
         self.pot = 0
