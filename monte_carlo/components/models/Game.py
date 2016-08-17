@@ -16,7 +16,12 @@ class Game(object):
         self.table_min = table_min
 
         self.rounds = []
+        self.started = False
         self.over = False
+
+    def start(self):
+        self.started = True
+        self.newRound()
 
     def add_player(self, player):
         self.players.append(player)

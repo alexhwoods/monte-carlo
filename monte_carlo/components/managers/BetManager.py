@@ -14,7 +14,14 @@ class BetManager:
             bet(player, amount)
             setRaise(player) - used in bet(), simply updates the current bet and who's matched it
             
-    
+
+    ACTIVE PLAYERS IDEA
+    TODO - Make an array of players, initialized by all players. It will represent the players
+            still left in the round. When a player folds, delete him from this array. Consider the
+            winners only using this array. Will make life easier.
+
+            The array will stay as it is for a round, being reset to all the players in
+            the game at the end of a round.
     
     '''
 
@@ -23,6 +30,7 @@ class BetManager:
     def __init__(self, game):
         self.game = game
         self.players = game.players
+        self.active_players = game.players
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
 
@@ -71,6 +79,8 @@ class BetManager:
         
     def fold(self, player):
         player.fold()
+        self.active_players.remove(player)
+
 
     ''' This method does exactly what it says, bets. No more, no less. Raises need to be dealt with separately,
         game flow needs to be dealt with separately.
@@ -128,10 +138,10 @@ class BetManager:
 
     # internal
     def setRaise(self, player):
-        self.matched_raise = {player: False for player in self.players if not player.folded}
+        self.matched_raise = {player: False for player in self.active_players}
         self.matched_raise[player] = True
 
-    # TODO - not sure what to do with this
+    # internal
     def pot_folded(self, pot):
         fold_summary = []
         if pot in self.pots:
@@ -158,7 +168,7 @@ class BetManager:
 
         winners = [pot.players[0]]
         best_hand = winners[0].best_hand
-        for player in pot.players:
+        for player in list(set(pot.players).intersection(set(self.active_players))):
             if Hand.winner(best_hand, player.best_hand) == player.best_hand:
                 # if there is a clear winner we need to reset the winners array, because maybe there was a tie
                 # between two players and a third player beat one of them (and thus both of them)
@@ -185,7 +195,7 @@ class BetManager:
             return dict
 
     def getRaiseStatus(self):
-        self.matched_raise = {player: False for player in self.players if not player.folded}
+        self.matched_raise = {player: False for player in self.active_players}
         return self.matched_raise
 
     def getPotStatus(self):
