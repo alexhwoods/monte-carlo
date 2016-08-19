@@ -10,7 +10,7 @@ def test_method():
     return 'THIS IS A TEST'
 
 
-@app.route('/game/create', methods=['POST'])
+@app.route('/game', methods=['POST'])
 def create_game():
     game = gm.createGame()
     return game
@@ -31,7 +31,7 @@ def get_game():
     return game
 
 
-@app.route('/game/join', methods=['POST'])
+@app.route('/game', methods=['PUT'])
 def joinGame():
     gameID = 1234
     playerID = 5678

@@ -2,20 +2,20 @@ from monte_carlo.components.models.Player import Player
 import uuid
 
 
-players = []
+players = {}
 
 
 def create(name, chips):
     player = Player(name, chips)
-    players.append(player)
+    players[player.id] = player
     return player
 
 
 def getByID(id):
-    for player in players:
-        if player.id == id:
-            return player
-    return None
+    if id in players.keys():
+        return players[id]
+    else:
+        return None
 
 
 

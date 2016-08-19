@@ -3,14 +3,14 @@ from monte_carlo.components.models.Player import Player
 import monte_carlo.components.managers.PlayerManager as pm
 
 
-games = []
-past_games = []
+games = {}
+past_games = {}
 
 
 def createGame():
     # TODO - eventually set this up to handle a table min
     game = Game()
-    games.append(game)
+    games[game.id] = game
     return game
 
 
@@ -22,9 +22,8 @@ def getPlayers(gameID):
 
 
 def getByID(gameID):
-    for game in games:
-        if game.id == gameID:
-            return game
+    if gameID in games.keys():
+        return games[gameID]
     return None
 
 
@@ -43,9 +42,8 @@ def joinGame(playerID, gameID):
 def endGame(gameID):
     game = getByID(gameID)
     if game in games:
-        game.over = True
-        games.remove(game)
-        past_games.append(game)
+        del games[gameID]
+        past_games[gameID] = game
         return 'Success'
     else:
         return 'Failure'

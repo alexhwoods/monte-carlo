@@ -1,9 +1,6 @@
-from monte_carlo.components.models.Player import Player
 from monte_carlo.components.models.Hand import Hand
 from monte_carlo.components.models.Pot import Pot
-from collections import namedtuple
 import math
-from pprint import pprint
 
 
 class BetManager:
@@ -15,13 +12,8 @@ class BetManager:
             setRaise(player) - used in bet(), simply updates the current bet and who's matched it
             
 
-    ACTIVE PLAYERS IDEA
-    TODO - Make an array of players, initialized by all players. It will represent the players
-            still left in the round. When a player folds, delete him from this array. Consider the
-            winners only using this array. Will make life easier.
+    TODO - I need a good way of saving the data to a database to use for the machine learning model.
 
-            The array will stay as it is for a round, being reset to all the players in
-            the game at the end of a round.
     
     '''
 
