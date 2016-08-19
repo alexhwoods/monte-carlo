@@ -1,5 +1,4 @@
 from monte_carlo.components.models.Player import Player
-import uuid
 
 
 players = {}

@@ -1,9 +1,10 @@
 from monte_carlo import app
-from monte_carlo.components.models.Game import Game
 import monte_carlo.components.managers.GameManager as gm
 import monte_carlo.components.managers.PlayerManager as pm
+from flask import request
+import jsonpickle
 
-# TODO - all necessary parameters in each method need to be grabbed through JSON
+# TODO - make the urls better
 
 @app.route('/test', methods=['GET'])
 def test_method():
@@ -13,37 +14,45 @@ def test_method():
 @app.route('/game', methods=['POST'])
 def create_game():
     game = gm.createGame()
-    return game
+    game_json = jsonpickle.encode(game)
+    return game_json
 
 
 # gets players for a given game
 @app.route('/game/players', methods=['GET'])
 def get_players():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
+
     players = gm.getPlayers(gameID)
-    return players
+    return jsonpickle.encode(players)
 
 
 @app.route('/games/find', methods=['GET'])
 def get_game():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
+
     game = gm.getByID(gameID)
-    return game
+    game_json = jsonpickle.encode(game)
+    return game_json
 
 
 @app.route('/game', methods=['PUT'])
 def joinGame():
-    gameID = 1234
-    playerID = 5678
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    # message is 'Success' or 'Failure'
+    # message is 'Success' or 'Failure'...I just can't make myself JSON encode this
     message = gm.joinGame(playerID, gameID)
     return message
 
 
 @app.route('game/start', methods=['POST'])
 def startGame():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
     game.start()
     return 'Game Started'
@@ -52,7 +61,8 @@ def startGame():
 # It's important to not create a new round if one is still going on!
 @app.route('game/round/new', methods=['POST'])
 def newRound():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
     game.newRound()
     return 'New Round Created'
@@ -60,29 +70,33 @@ def newRound():
 
 @app.route('/game/end', methods=['POST'])
 def endGame():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
 
     message = gm.endGame(gameID)
     return message
 
 @app.route('/game/winner', methods=['GET'])
 def getGameWinner():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
-    return game.winner()
+    return jsonpickle.encode(game.winner())
 
 
 @app.route('/player/new', methods=['POST'])
 def create_player():
-    name = 'John Doe'
-    chips = 100
+    data = request.json
+    name = data['name']
+    chips = data['chips']
     player = pm.create(name, chips)
-    return player
+    return jsonpickle.encode(player)
 
 
 @app.route('/game/round/deal', methods=['POST'])
 def deal():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
 
     round = game.getCurrentRound()
@@ -92,14 +106,15 @@ def deal():
 # given a player ID and game ID return their hole cards for the current round
 @app.route('/player/cards', methods=['GET'])
 def getHoleCards():
-    gameID = 1234
-    game = gm.getByID(gameID)
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    playerID = 5678
+    game = gm.getByID(gameID)
     player = pm.getByID(playerID)
 
     if player in game.players:
-        return player.hand
+        return jsonpickle.encode(player.hand)
     else:
         return None
 
@@ -107,136 +122,154 @@ def getHoleCards():
 # given a game id get the community cards for the current round
 @app.route('/game/cards', methods=['GET'])
 def getCommunityCards():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
 
     round = game.getCurrentRound()
-    return round.community_cards
+    return jsonpickle.encode(round.community_cards)
 
 
 # go to the next stage of a round
 @app.route('game/round/next', methods=['POST'])
 def nextStage():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
 
     round = game.getCurrentRound()
     round.next_stage()
 
-    return round.stage
+    return jsonpickle.encode(round.stage)
 
 
 @app.route('game/over', methods=['GET'])
 def gameIsOver():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
-    return game.isOver()
+
+    return jsonpickle.encode(game.isOver())
 
 
 @app.route('game/round/end', methods=['POST'])
 def endCurrentRound():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
+
     game = gm.getByID(gameID)
     game.endCurrentRound()
+    return 'Round ended.'
 
 
 @app.route('game/round/num', methods=['GET'])
 def getRoundNumber():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
 
-    return len(game.rounds)
+    return jsonpickle.encode(len(game.rounds))
 
 
 # start betting round
 @app.route('game/round/end', methods=['POST'])
 def startBettingRound():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
     game.bm.startBettingRound()
     
     # I guess I'll return the first player to bet
-    return game.bm.players[0]
+    return jsonpickle.encode(game.bm.players[0])
 
 
 @app.route('game/round/betting/current', methods=['GET'])
 def getCurrentBet():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
-    return game.bm.current_bet
+
+    return jsonpickle.encode(game.bm.current_bet)
 
 
 @app.route('game/round/betting/options', methods=['GET'])
 def getBettingOptions():
-    gameID = 1234
-    game = gm.getByID(gameID)
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    playerID = 5678
+    game = gm.getByID(gameID)
     player = pm.getByID(playerID)
-    return game.bm.getOptions(player)
+    return jsonpickle.encode(game.bm.getOptions(player))
 
 
 @app.route('game/round/betting/limit', methods=['GET'])
 def getRaiseLimit():
-    gameID = 1234
-    game = gm.getByID(gameID)
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    playerID = 5678
+    game = gm.getByID(gameID)
     player = pm.getByID(playerID)
-    
-    return game.bm.getRaiseLimit(player)
+
+    return jsonpickle.encode(game.bm.getRaiseLimit(player))
 
 
 @app.route('game/round/fold', methods=['POST'])
 def fold():
-    gameID = 1234
-    game = gm.getByID(gameID)
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    playerID = 5678
+    game = gm.getByID(gameID)
     player = pm.getByID(playerID)
     
     game.bm.fold(player)
-    return game.bm.getRaiseStatus()
+    return jsonpickle.encode(game.bm.getRaiseStatus())
 
 
 @app.route('game/round/bet', methods=['POST'])
 def bet():
-    gameID = 1234
-    game = gm.getByID(gameID)
+    data = request.json
+    gameID = data['gameID']
+    playerID = data['playerID']
 
-    playerID = 5678
+    game = gm.getByID(gameID)
     player = pm.getByID(playerID)
     
-    amount = 45
-    is_raise = False
+    amount = int(data['amount'])
+    is_raise = bool(data['is_raise'])
     
     game.bm.bet(player, amount, is_raise)
     
-    return game.bm.getRaiseStatus()
+    return jsonpickle.encode(game.bm.getRaiseStatus())
 
 
 # these are the winners for the round, not the entire game. Will return None if round is still going.
 @app.route('game/round/winner', methods=['GET'])
 def getRoundWinners():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
 
-    return game.bm.getAllWinners()
+    return jsonpickle.encode(game.bm.getAllWinners())
 
 
 # SUPER IMPORTANT METHOD RIGHT HERE!!! This determines if the betting round can stop or not.
 @app.route('game/round/status/raise', methods=['GET'])
 def getRaiseStatus():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
-    return game.bm.getRaiseStatus()
+    return jsonpickle.encode(game.bm.getRaiseStatus())
 
 
 @app.route('game/round/status/fold', methods=['GET'])
 def getFoldStatus():
-    gameID = 1234
+    data = request.json
+    gameID = data['gameID']
     game = gm.getByID(gameID)
-    return game.bm.getFoldStatus()
+    return jsonpickle.encode(game.bm.getFoldStatus())
 
 
 
