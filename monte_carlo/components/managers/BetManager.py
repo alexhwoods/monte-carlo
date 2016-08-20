@@ -26,8 +26,8 @@ class BetManager:
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
 
-        # there is initially one pot, namely, the main pot.
-        self.pots = [Pot(self.players, min(self.chips.values()))]
+        # there is initially one pot, namely, the main pot. The max per player is added later
+        self.pots = [Pot(self.players, 0)]
 
         self.eligibles = self.players
         self.update_eligibles()
@@ -43,6 +43,8 @@ class BetManager:
         self.winnings = {player: 0 for player in self.players}
 
     def startBettingRound(self):
+        self.pots[0].max_per_player = min(self.chips.values())
+
         self.current_bet = 0
         self.matched_raise = {player: False for player in self.players if not player.folded}
 
@@ -198,29 +200,16 @@ class BetManager:
 
     # internal
     def distribute(self):
-        num = 1
         for pot in self.pots:
             winners = self.getPotWinner(pot)
             if len(winners) == 1:
                 winner = winners[0]
                 winner.chips += pot.get_amount()
 
-                if pot == self.pots[0]:
-                    # print(winner.name + ' wins the main pot.')
-                else:
-                    # print(winner.name + ' wins side pot ' + str(num))
-                    num += 1
-
             else:
                 share = pot.get_amount() / float(len(winners))
                 for winner in winners:
                     winner.chips += share
-                #     # print(winner.name)
-                # if pot == self.pots[0]:
-                #     print('have won the main pot.')
-                # else:
-                #     print(' wins side pot ' + str(num))
-                #     num += 1
 
     # internal, NUE
     def done_by_fold(self):
@@ -240,7 +229,10 @@ class BetManager:
     # internal and stays in this class
     def set_min(self):
         # initialize to some players chip count, a number definitely not smaller than min
-        min_chips = self.chips[self.players[0]]
+        if len(self.players) > 0:
+            min_chips = self.chips[self.players[0]]
+        else:
+            min_chips = 0
         for amount in self.chips.values():
             min_chips = min(math.ceil(0.5 * amount), self.round.table_min)
 

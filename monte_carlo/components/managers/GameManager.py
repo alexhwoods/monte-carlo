@@ -1,5 +1,4 @@
 from monte_carlo.components.models.Game import Game
-from monte_carlo.components.models.Player import Player
 import monte_carlo.components.managers.PlayerManager as pm
 
 
@@ -11,7 +10,7 @@ def createGame():
     # TODO - eventually set this up to handle a table min
     game = Game()
     games[game.id] = game
-    return game
+    # return game
 
 
 def getPlayers(gameID):
