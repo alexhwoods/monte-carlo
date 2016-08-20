@@ -6,7 +6,7 @@ players = {}
 
 def create(name, chips):
     player = Player(name, chips)
-    players[player.id] = player
+    players[str(player.id)] = player
     return player
 
 

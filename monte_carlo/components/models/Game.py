@@ -12,19 +12,20 @@ class Game(object):
 
         self.deck = Deck()
         self.players = []
-        self.bm = BetManager()
         self.table_min = table_min
-
+        self.bm = None
         self.rounds = []
         self.started = False
         self.over = False
 
     def start(self):
+        self.bm = BetManager(self)
         self.started = True
         self.newRound()
 
     def add_player(self, player):
         self.players.append(player)
+
 
     def get_players(self):
         return self.players
@@ -32,9 +33,20 @@ class Game(object):
     def newRound(self):
         self.deck = Deck()
         self.deck.shuffle()
+        if len(self.rounds) > 0:
+            previous_round = self.rounds[-1]
+            if previous_round.over:
+                round = Round(self)
+                self.rounds.append(round)
+                return True
+            else:
+                return False
 
-        round = Round(self)
-        self.rounds.append(round)
+        else:
+            round = Round(self)
+            self.rounds.append(round)
+            return True
+
 
     def getCurrentRound(self):
         return self.rounds[-1]
@@ -44,9 +56,9 @@ class Game(object):
         for player in self.players:
             player.hand = None
         # giving the chips to those that won them
-        self.bet_manager.distribute()
+        self.bm.distribute()
         round.over = True
-        self.bet_manager.reset()
+        self.bm.reset()
 
     def isOver(self):
         chips = [player.chips for player in self.players]

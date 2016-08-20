@@ -234,7 +234,7 @@ class BetManager:
         else:
             min_chips = 0
         for amount in self.chips.values():
-            min_chips = min(math.ceil(0.5 * amount), self.round.table_min)
+            min_chips = min(math.ceil(0.5 * amount), self.game.table_min)
 
         self.minimum_bet = min_chips
 
