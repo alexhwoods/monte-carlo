@@ -140,6 +140,7 @@ def deal():
     return round.stage + ' is dealt.'
 
 
+# tested
 # given a player ID and game ID return their hole cards for the current round
 @app.route('/player/cards', methods=['VIEW'])
 def getHoleCards():
@@ -156,6 +157,7 @@ def getHoleCards():
         return None
 
 
+# tested
 # given a game id get the community cards for the current round
 @app.route('/game/cards', methods=['VIEW'])
 def getCommunityCards():
@@ -166,7 +168,7 @@ def getCommunityCards():
     round = game.getCurrentRound()
     return jsonpickle.encode(round.community_cards)
 
-
+# tested
 # go to the next stage of a round
 @app.route('/game/round/next', methods=['POST'])
 def nextStage():
@@ -221,8 +223,8 @@ def getRoundNumber():
     return jsonpickle.encode(len(game.rounds))
 
 
-# start betting round
-@app.route('/game/round/end', methods=['POST'])
+# tested
+@app.route('/game/round/betting/start', methods=['POST'])
 def startBettingRound():
     data = request.json
     gameID = data["gameID"]
@@ -233,6 +235,7 @@ def startBettingRound():
     return jsonpickle.encode(game.bm.players[0])
 
 
+# tested
 @app.route('/game/round/betting/current', methods=['VIEW'])
 def getCurrentBet():
     data = request.json
@@ -242,6 +245,7 @@ def getCurrentBet():
     return jsonpickle.encode(game.bm.current_bet)
 
 
+# tested
 @app.route('/game/round/betting/options', methods=['VIEW'])
 def getBettingOptions():
     data = request.json
@@ -253,6 +257,7 @@ def getBettingOptions():
     return jsonpickle.encode(game.bm.getOptions(player))
 
 
+# tested
 @app.route('/game/round/betting/limit', methods=['VIEW'])
 def getRaiseLimit():
     data = request.json
@@ -264,7 +269,7 @@ def getRaiseLimit():
 
     return jsonpickle.encode(game.bm.getRaiseLimit(player))
 
-
+# tested
 @app.route('/game/round/fold', methods=['POST'])
 def fold():
     data = request.json
@@ -275,9 +280,10 @@ def fold():
     player = pm.getByID(playerID)
     
     game.bm.fold(player)
-    return jsonpickle.encode(game.bm.getRaiseStatus())
+    return jsonpickle.encode(game.bm.nextBetter())
 
 
+# some testing done
 @app.route('/game/round/bet', methods=['POST'])
 def bet():
     data = request.json
@@ -287,12 +293,32 @@ def bet():
     game = gm.getByID(gameID)
     player = pm.getByID(playerID)
     
-    amount = int(data['amount'])
-    is_raise = bool(data['is_raise'])
+    amount = int(data["amount"])
+    is_raise = bool(data["is_raise"])
     
     game.bm.bet(player, amount, is_raise)
     
-    return jsonpickle.encode(game.bm.getRaiseStatus())
+    return jsonpickle.encode(game.bm.nextBetter())
+
+
+# TODO: TEST
+@app.route('/game/round/pots', methods=['VIEW'])
+def getPots():
+    data = request.json
+    gameID = data["gameID"]
+
+    game = gm.getByID(gameID)
+    return jsonpickle.encode(game.bm.getPots())
+
+
+# Seems to be working
+@app.route('/game/round/betting/next', methods=['VIEW'])
+def nextBetter():
+    data = request.json
+    gameID = data["gameID"]
+
+    game = gm.getByID(gameID)
+    return jsonpickle.encode(game.bm.nextBetter())
 
 
 # these are the winners for the round, not the entire game. Will return None if round is still going.
@@ -305,7 +331,7 @@ def getRoundWinners():
     return jsonpickle.encode(game.bm.getAllWinners())
 
 
-# SUPER IMPORTANT METHOD RIGHT HERE!!! This determines if the betting round can stop or not.
+# TODO: test more, jsonpickle doesn't handle dictionaries well
 @app.route('/game/round/status/raise', methods=['VIEW'])
 def getRaiseStatus():
     data = request.json
@@ -314,6 +340,7 @@ def getRaiseStatus():
     return jsonpickle.encode(game.bm.getRaiseStatus())
 
 
+# TODO: test more, jsonpickle doesn't handle dictionaries well
 @app.route('/game/round/status/fold', methods=['VIEW'])
 def getFoldStatus():
     data = request.json

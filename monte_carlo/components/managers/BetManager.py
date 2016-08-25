@@ -14,6 +14,11 @@ class BetManager:
 
     TODO - I need a good way of saving the data to a database to use for the machine learning model.
 
+
+    Wondering if I should make a betting round object...damn betting is complicated.
+
+
+    TODO: make sure the order in which players are prompted to bet makes sense.
     
     '''
 
@@ -25,10 +30,12 @@ class BetManager:
         self.active_players = game.players
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
+        self.started = False
 
         # there is initially one pot, namely, the main pot. The max per player is added later
         self.pots = [Pot(self.players, 0)]
 
+        # players eligible to join the next side pot.
         self.eligibles = self.players
         self.update_eligibles()
 
@@ -43,6 +50,7 @@ class BetManager:
         self.winnings = {player: 0 for player in self.players}
 
     def startBettingRound(self):
+        self.started = True
         self.pots[0].max_per_player = min(self.chips.values())
 
         self.current_bet = 0
@@ -70,10 +78,26 @@ class BetManager:
             return None
         else:
             return self.chips[player] - self.current_bet
+
+    def getPots(self):
+        if not self.started:
+            return "Betting Round Not Started."
+        else:
+            return self.pots
         
     def fold(self, player):
         player.fold()
         self.active_players.remove(player)
+
+    def nextBetter(self):
+        if not self.started:
+            return "Betting Round Not Started."
+        else:
+            for player in self.active_players:
+                if not player.folded and not self.matched_raise[player]:
+                    return player
+
+            return None
 
 
     ''' This method does exactly what it says, bets. No more, no less. Raises need to be dealt with separately,
@@ -198,7 +222,7 @@ class BetManager:
     def getFoldStatus(self):
         return {player: player.folded for player in self.players}
 
-    # internal
+    # internal UE
     def distribute(self):
         for pot in self.pots:
             winners = self.getPotWinner(pot)
@@ -211,14 +235,14 @@ class BetManager:
                 for winner in winners:
                     winner.chips += share
 
-    # internal, NUE
+    # internal, NUE (not used elsewhere)
     def done_by_fold(self):
         fold_summary = [player.folded for player in self.players]
 
         # if there is only one player who has still not folded
         return False in [x for x in set(fold_summary) if fold_summary.count(x) == 1]
 
-    # internal, UE
+    # internal, UE (used elsewhere)
     def reset(self):
         self.minimum_bet = 0
         self.set_min()
