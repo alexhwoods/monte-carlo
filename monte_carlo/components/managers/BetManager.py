@@ -27,7 +27,10 @@ class BetManager:
     def __init__(self, game):
         self.game = game
         self.players = game.players
-        self.active_players = game.players
+
+        # table is a stack of the players.  A STACK.
+        self.table = game.players
+
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
         self.started = False
@@ -87,18 +90,26 @@ class BetManager:
         
     def fold(self, player):
         player.fold()
-        self.active_players.remove(player)
+        self.table.remove(player)
 
     def nextBetter(self):
         if not self.started:
             return "Betting Round Not Started."
         else:
-            for player in self.active_players:
+            for player in self.table:
                 if not player.folded and not self.matched_raise[player]:
                     return player
 
             return None
 
+    # for internal testing purposes, but might be useful in the future.
+    def getBetStatus(self):
+        summary = {}
+        for player in self.table:
+            already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
+            summary[player.id] = already_bet
+
+        return summary
 
     ''' This method does exactly what it says, bets. No more, no less. Raises need to be dealt with separately,
         game flow needs to be dealt with separately.
@@ -108,11 +119,20 @@ class BetManager:
     def bet(self, player, amount, is_raise=False):
 
         if is_raise:
+            print("RAISE WAS SET, MATCHED RAISE UPDATED.")
             self.setRaise(player)
             self.current_bet = amount
 
-        if amount == self.current_bet or player.chips - amount == 0:
+        already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
+        # print(self.getBetStatus())
+
+        # print("Value to contest: " + str(already_bet + amount))
+        if amount == self.current_bet or player.chips - amount == 0 or already_bet + amount == self.current_bet:
+            print("PLAYER RAISE STATUS UPDATED.")
             self.matched_raise[player] = True
+
+            # move the player who just bet to the back of the stack
+            self.table.append(self.table.pop(0))
 
         while amount > 0:
             for pot in self.pots:
@@ -154,9 +174,11 @@ class BetManager:
                     new_pot = Pot(self.eligibles, new_max)
                     self.pots.append(new_pot)
 
+
+
     # internal
     def setRaise(self, player):
-        self.matched_raise = {player: False for player in self.active_players}
+        self.matched_raise = {player: False for player in self.table}
         self.matched_raise[player] = True
 
     # internal
@@ -186,7 +208,7 @@ class BetManager:
 
         winners = [pot.players[0]]
         best_hand = winners[0].best_hand
-        for player in list(set(pot.players).intersection(set(self.active_players))):
+        for player in list(set(pot.players).intersection(set(self.table))):
             if Hand.winner(best_hand, player.best_hand) == player.best_hand:
                 # if there is a clear winner we need to reset the winners array, because maybe there was a tie
                 # between two players and a third player beat one of them (and thus both of them)
@@ -213,7 +235,6 @@ class BetManager:
             return dict
 
     def getRaiseStatus(self):
-        self.matched_raise = {player: False for player in self.active_players}
         return self.matched_raise
 
     def getPotStatus(self):
@@ -248,7 +269,6 @@ class BetManager:
         self.set_min()
 
         self.current_bet = 0
-        self.bets = {player: 0 for player in self.players}  # used in constructor, no need to call elsewhere
 
     # internal and stays in this class
     def set_min(self):

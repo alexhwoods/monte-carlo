@@ -12,6 +12,7 @@ import jsonpickle
     TODO - make the urls better
 
     note - JSON strings must always use double quotes
+    note - in JSON, send true as 1 and false as 0.
 
 '''
 
@@ -295,6 +296,7 @@ def bet():
     
     amount = int(data["amount"])
     is_raise = bool(data["is_raise"])
+    print("is_raise = " + str(is_raise))
     
     game.bm.bet(player, amount, is_raise)
     
@@ -311,7 +313,15 @@ def getPots():
     return jsonpickle.encode(game.bm.getPots())
 
 
-# Seems to be working
+''' So far I've tested the basic check and match case.
+
+    I've also tested the situation with one raise.
+
+    TODO: test with tons of raises
+          test with no bets at all (all checks)
+          test with all folds but one
+
+'''
 @app.route('/game/round/betting/next', methods=['VIEW'])
 def nextBetter():
     data = request.json
@@ -331,13 +341,17 @@ def getRoundWinners():
     return jsonpickle.encode(game.bm.getAllWinners())
 
 
-# TODO: test more, jsonpickle doesn't handle dictionaries well
+# tested
 @app.route('/game/round/status/raise', methods=['VIEW'])
 def getRaiseStatus():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
-    return jsonpickle.encode(game.bm.getRaiseStatus())
+    # return jsonpickle.encode(game.bm.getRaiseStatus())
+
+    d = game.bm.getRaiseStatus()
+    temp = {player.id: d[player] for player in d.keys()}
+    return jsonpickle.encode(temp)
 
 
 # TODO: test more, jsonpickle doesn't handle dictionaries well
