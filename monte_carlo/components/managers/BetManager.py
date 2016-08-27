@@ -26,6 +26,7 @@ class BetManager:
 
     def __init__(self, game):
         self.game = game
+        self.firstOfRound = None
 
         # if you don't do .copy() some weird shit happens because of something horrible called "shallow copying"
         self.players = game.players.copy()
@@ -55,10 +56,14 @@ class BetManager:
         self.bets = {player: 0 for player in self.players}
         self.winnings = {player: 0 for player in self.players}
 
-    def startBettingRound(self):
+    def startBettingRound(self, firstOfRound=True):
         self.started = True
-        self.pots[0].max_per_player = min(self.chips.values())
 
+        # If this is the first betting round of the round, we need to set the mpp of the main pot
+        if firstOfRound:
+            self.pots[0].max_per_player = min(self.chips.values())
+
+        # this is ok
         self.current_bet = 0
         self.matched_raise = {player: False for player in self.players if not player.folded}
 
@@ -126,16 +131,16 @@ class BetManager:
         Note that we will take extra care to only present the user with valid bet options.
     '''
     def bet(self, player, amount, is_raise=False):
+        betStatus = self.getBetStatus()
 
         if is_raise:
             print("RAISE WAS SET, MATCHED RAISE UPDATED.")
             self.setRaise(player)
-            self.current_bet = amount
 
-        already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
-        # print(self.getBetStatus())
+            self.current_bet = betStatus[player] + amount
 
-        # print("Value to contest: " + str(already_bet + amount))
+        already_bet = betStatus[player]
+
         if amount == self.current_bet or player.chips - amount == 0 or already_bet + amount == self.current_bet:
             print("PLAYER RAISE STATUS UPDATED.")
             self.matched_raise[player] = True

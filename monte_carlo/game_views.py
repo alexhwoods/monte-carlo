@@ -14,6 +14,9 @@ import jsonpickle
     note - JSON strings must always use double quotes
     note - in JSON, send true as 1 and false as 0.
 
+    note - an oddity of uuid, but when you return player.id, it returns a hash including dashes. However,
+           when you return player, it doesn't have dashes. Wierd...
+
 '''
 
 @app.route('/test', methods=['VIEW'])
@@ -63,7 +66,7 @@ def get_players():
     game = gm.getByID(gameID)
 
     # players = gm.getPlayers(gameID)
-    ids = [player.id for player in game.players]
+    ids = [str(player.id) for player in game.players]
     return jsonpickle.encode(ids)
 
 
@@ -86,9 +89,9 @@ def joinGame():
     playerID = data["playerID"]
     players = gm.joinGame(playerID, gameID)
     if players is not None:
-        return jsonpickle.encode({gameID: [player.name for player in players]})
+        return "Player Joined"
     else:
-        return None
+        return "Player Not Found"
 
 
 # tested
@@ -99,7 +102,9 @@ def startGame():
     game = gm.getByID(gameID)
     if game is not None:
         game.start()
-    return gm.getStatus(gameID)
+        return jsonpickle.encode({gameID: "started"})
+    else:
+        return "Game Not Found"
 
 
 # tested
@@ -177,7 +182,7 @@ def getHoleCards():
     if player in game.players:
         return jsonpickle.encode(player.hand)
     else:
-        return None
+        return "Player Not Found"
 
 
 # tested
@@ -253,11 +258,16 @@ def startBettingRound():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
-    game.bm.startBettingRound()
-    
-    # I guess I'll return the first player to bet
-    return jsonpickle.encode(game.bm.players[0])
 
+    firstOfRound = bool(data["firstOfRound"])
+    game.bm.startBettingRound(firstOfRound)
+
+    next_better = game.bm.nextBetter()
+
+    if next_better is not None:
+        return jsonpickle.encode({"playerID": str(next_better.id)})
+    else:
+        return "Game has no players."
 
 # tested
 @app.route('/game/round/betting/current', methods=['VIEW'])
@@ -266,7 +276,7 @@ def getCurrentBet():
     gameID = data["gameID"]
     game = gm.getByID(gameID)
 
-    return jsonpickle.encode(game.bm.current_bet)
+    return jsonpickle.encode({"currentBet": game.bm.current_bet})
 
 
 # tested
@@ -292,7 +302,7 @@ def getBetStatus():
     dict = game.bm.getBetStatus()
 
     if player in dict.keys():
-        return jsonpickle.encode(dict[player])
+        return jsonpickle.encode({"playerID": str(player.id), "amount": dict[player]})
     else:
         return "Player not in summary for some reason"
 
@@ -320,7 +330,13 @@ def fold():
     player = pm.getByID(playerID)
     
     game.bm.fold(player)
-    return jsonpickle.encode(game.bm.nextBetter())
+
+    next_better = game.bm.nextBetter()
+
+    if next_better is not None:
+        return jsonpickle.encode({"playerID": str(next_better.id)})
+    else:
+        return "null'"
 
 
 # some testing done
@@ -338,9 +354,13 @@ def bet():
     print("is_raise = " + str(is_raise))
     
     game.bm.bet(player, amount, is_raise)
-    
-    return jsonpickle.encode(game.bm.nextBetter())
 
+    next_better = game.bm.nextBetter()
+
+    if next_better is not None:
+        return jsonpickle.encode({"playerID": str(next_better.id)})
+    else:
+        return "null"
 
 # TODO: TEST
 @app.route('/game/round/pots', methods=['VIEW'])
@@ -367,8 +387,12 @@ def nextBetter():
     gameID = data["gameID"]
 
     game = gm.getByID(gameID)
-    return jsonpickle.encode(game.bm.nextBetter())
+    next_better = game.bm.nextBetter()
 
+    if next_better is not None:
+        return jsonpickle.encode({"playerID": str(next_better.id)})
+    else:
+        return "null"
 
 # these are the winners for the round, not the entire game. Will return None if round is still going.
 @app.route('/game/round/winner', methods=['VIEW'])
@@ -389,7 +413,7 @@ def getRaiseStatus():
     # return jsonpickle.encode(game.bm.getRaiseStatus())
 
     d = game.bm.getRaiseStatus()
-    temp = {player.id: d[player] for player in d.keys()}
+    temp = {str(player.id): d[player] for player in d.keys()}
     return jsonpickle.encode(temp)
 
 
@@ -399,7 +423,10 @@ def getFoldStatus():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
-    return jsonpickle.encode(game.bm.getFoldStatus())
+    dict = game.bm.getFoldStatus()
+    dict2 = {str(player.id): str(dict[player]) for player in dict.keys()}
+
+    return jsonpickle.encode(dict2)
 
 
 
