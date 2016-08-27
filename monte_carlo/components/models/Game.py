@@ -33,6 +33,11 @@ class Game(object):
     def newRound(self):
         self.deck = Deck()
         self.deck.shuffle()
+
+        # folding reset
+        for player in self.players:
+            player.folded = False
+
         if len(self.rounds) > 0:
             previous_round = self.rounds[-1]
             if previous_round.over:

@@ -26,10 +26,12 @@ class BetManager:
 
     def __init__(self, game):
         self.game = game
-        self.players = game.players
 
-        # table is a stack of the players.  A STACK.
-        self.table = game.players
+        # if you don't do .copy() some weird shit happens because of something horrible called "shallow copying"
+        self.players = game.players.copy()
+
+        # table is a stack of the players (ok a mini-stack, it's like 15% implemented haha)
+        self.table = game.players.copy()
 
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
@@ -38,10 +40,11 @@ class BetManager:
         # there is initially one pot, namely, the main pot. The max per player is added later
         self.pots = [Pot(self.players, 0)]
 
-        # players eligible to join the next side pot.
-        self.eligibles = self.players
+        # players eligible to join the next side pot, only used internally
+        self.eligibles = self.players.copy()
         self.update_eligibles()
 
+        # only used internally
         self.matched_raise = {player: True for player in self.players}
 
 
@@ -90,12 +93,18 @@ class BetManager:
         
     def fold(self, player):
         player.fold()
-        self.table.remove(player)
+
+        # in case the fold request is sent too many times (a player should only be able to fold once per round)
+        if player in self.table:
+            self.table.remove(player)
 
     def nextBetter(self):
         if not self.started:
             return "Betting Round Not Started."
         else:
+            if self.done_by_fold():
+                return None
+
             for player in self.table:
                 if not player.folded and not self.matched_raise[player]:
                     return player
@@ -107,7 +116,7 @@ class BetManager:
         summary = {}
         for player in self.table:
             already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
-            summary[player.id] = already_bet
+            summary[player] = already_bet
 
         return summary
 
@@ -197,14 +206,22 @@ class BetManager:
     def getPotWinner(self, pot):
         # if all the players fold, we don't need to compare cards to see who wins, we just pick the one who
         # hasn't folded yet.
-        if BetManager.pot_folded(pot):
+        if self.pot_folded(pot):
             for player in pot.players:
                 if not player.folded:
                     return [player]
 
         for player in pot.players:
+            if player.hand is None:
+                # if they haven't dealt yet
+                return None
+
             round = self.game.getCurrentRound()
-            player.best_hand = Hand.get_best_hand(Hand(round.community_cards) + player.hand)
+            if round.stage == 'HOLE':
+                # if still in the hole stage, no community cards have been dealt, but you can still discern a winner
+                player.best_hand = player.hand
+            else:
+                player.best_hand = Hand.get_best_hand(Hand(round.community_cards) + player.hand)
 
         winners = [pot.players[0]]
         best_hand = winners[0].best_hand
@@ -247,7 +264,9 @@ class BetManager:
     def distribute(self):
         for pot in self.pots:
             winners = self.getPotWinner(pot)
-            if len(winners) == 1:
+            if winners is None:
+                pass
+            elif len(winners) == 1:
                 winner = winners[0]
                 winner.chips += pot.get_amount()
 
@@ -255,6 +274,8 @@ class BetManager:
                 share = pot.get_amount() / float(len(winners))
                 for winner in winners:
                     winner.chips += share
+
+
 
     # internal, NUE (not used elsewhere)
     def done_by_fold(self):

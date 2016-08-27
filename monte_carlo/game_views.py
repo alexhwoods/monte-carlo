@@ -37,7 +37,16 @@ def get_games():
 # tested
 @app.route('/games/ids', methods=['VIEW'])
 def get_gameIDs():
-    return jsonpickle.encode(list(gm.games.keys()))
+    dict = {}
+    string = "game"
+    num = 1
+    for id in gm.games.keys():
+        string += str(num) + "ID"
+        num += 1
+        dict[string] = id
+        string = "game"
+
+    return jsonpickle.encode(dict)
 
 
 # not tested
@@ -51,9 +60,12 @@ def past_games():
 def get_players():
     data = request.json
     gameID = data["gameID"]
+    game = gm.getByID(gameID)
 
-    players = gm.getPlayers(gameID)
-    return jsonpickle.encode(players)
+    # players = gm.getPlayers(gameID)
+    ids = [player.id for player in game.players]
+    return jsonpickle.encode(ids)
+
 
 
 # tested
@@ -127,7 +139,17 @@ def get_all_players():
 # tested
 @app.route('/players/ids', methods=['VIEW'])
 def get_all_player_ids():
-    return jsonpickle.encode(list(pm.players.keys()))
+    dict = {}
+    string = "player"
+    num = 1
+    for id in pm.players.keys():
+        string += str(num) + "ID"
+        num += 1
+        dict[string] = id
+
+        string = "player"
+
+    return jsonpickle.encode(dict)
 
 
 @app.route('/game/round/deal', methods=['POST'])
@@ -192,6 +214,7 @@ def gameIsOver():
     return jsonpickle.encode(game.isOver())
 
 
+# tested
 @app.route('/game/round/end', methods=['POST'])
 def endCurrentRound():
     data = request.json
@@ -256,6 +279,22 @@ def getBettingOptions():
     game = gm.getByID(gameID)
     player = pm.getByID(playerID)
     return jsonpickle.encode(game.bm.getOptions(player))
+
+
+@app.route('/game/status/bet', methods=['VIEW'])
+def getBetStatus():
+    data = request.json
+    gameID = data["gameID"]
+    playerID = data["playerID"]
+
+    game = gm.getByID(gameID)
+    player = pm.getByID(playerID)
+    dict = game.bm.getBetStatus()
+
+    if player in dict.keys():
+        return jsonpickle.encode(dict[player])
+    else:
+        return "Player not in summary for some reason"
 
 
 # tested
@@ -354,7 +393,7 @@ def getRaiseStatus():
     return jsonpickle.encode(temp)
 
 
-# TODO: test more, jsonpickle doesn't handle dictionaries well
+# Doesn't work at all
 @app.route('/game/round/status/fold', methods=['VIEW'])
 def getFoldStatus():
     data = request.json
