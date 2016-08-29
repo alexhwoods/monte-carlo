@@ -1,6 +1,10 @@
 from monte_carlo.components.models.Hand import Hand
 from monte_carlo.components.models.Pot import Pot
+import collections
 import math
+
+# br = betting_round_num. This is purely for record keeping
+Bet = collections.namedtuple('Bet', ['amount', 'br'])
 
 
 class BetManager:
@@ -18,7 +22,7 @@ class BetManager:
     Wondering if I should make a betting round object...damn betting is complicated.
 
 
-    TODO: make sure the order in which players are prompted to bet makes sense.
+    Current bet is NOT reset when a betting round is started!!!!!!
     
     '''
 
@@ -26,7 +30,7 @@ class BetManager:
 
     def __init__(self, game):
         self.game = game
-        self.firstOfRound = None
+        self.betting_round_num = 0
 
         # if you don't do .copy() some weird shit happens because of something horrible called "shallow copying"
         self.players = game.players.copy()
@@ -62,6 +66,8 @@ class BetManager:
         # If this is the first betting round of the round, we need to set the mpp of the main pot
         if firstOfRound:
             self.pots[0].max_per_player = min(self.chips.values())
+        else:
+            self.betting_round_num += 1
 
         # this is ok
         self.current_bet = 0
@@ -117,13 +123,24 @@ class BetManager:
             return None
 
     # for internal testing purposes, but might be useful in the future.
-    def getBetStatus(self):
+    def getBetStatus(self, per_betting_round=False):
         summary = {}
-        for player in self.table:
-            already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
-            summary[player] = already_bet
+
+        # if player.bets is properly cleared this should be took expensive
+        if per_betting_round:
+            for player in self.table:
+                already_bet = sum([bet.amount for bet in player.bets if bet.br == self.betting_round_num])
+                summary[player] = already_bet
+
+        # what differs is the way already_bet is calculated
+        else:
+            for player in self.table:
+                already_bet = sum([pot.counts[player] for pot in self.pots if player in pot.players])
+                summary[player] = already_bet
 
         return summary
+
+
 
     ''' This method does exactly what it says, bets. No more, no less. Raises need to be dealt with separately,
         game flow needs to be dealt with separately.
@@ -131,18 +148,25 @@ class BetManager:
         Note that we will take extra care to only present the user with valid bet options.
     '''
     def bet(self, player, amount, is_raise=False):
-        betStatus = self.getBetStatus()
+
+        # if you switch the order of these two lines it fucks up everything
+        betStatus = self.getBetStatus(per_betting_round=True)
+        player.bets.append(Bet(amount, self.betting_round_num))
 
         if is_raise:
-            print("RAISE WAS SET, MATCHED RAISE UPDATED.")
+            # print("RAISE WAS SET, MATCHED RAISE UPDATED.")
             self.setRaise(player)
 
+            # this line is screwing up the multiple betting rounds thing.
+            print("bet status: " + str(betStatus[player]))
+            print("amount: " + str(amount))
             self.current_bet = betStatus[player] + amount
+            print("Current bet updated: " + str(self.current_bet))
 
         already_bet = betStatus[player]
 
         if amount == self.current_bet or player.chips - amount == 0 or already_bet + amount == self.current_bet:
-            print("PLAYER RAISE STATUS UPDATED.")
+            # print("PLAYER RAISE STATUS UPDATED.")
             self.matched_raise[player] = True
 
             # move the player who just bet to the back of the stack

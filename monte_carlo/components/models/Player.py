@@ -15,6 +15,10 @@ class Player(object):
         self.folded = False
         self.computer = computer
 
+        # This will be reset every round to keep searching it from being expensive
+        # TODO: reset it
+        self.bets = []
+
     def set_hand(self, arr):
         self.hand = Hand(arr)
 

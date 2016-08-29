@@ -296,15 +296,31 @@ def getBetStatus():
     data = request.json
     gameID = data["gameID"]
     playerID = data["playerID"]
+    per_betting_round = bool(data["per_betting_round"])
 
     game = gm.getByID(gameID)
     player = pm.getByID(playerID)
-    dict = game.bm.getBetStatus()
+    dict = game.bm.getBetStatus(per_betting_round)
 
     if player in dict.keys():
         return jsonpickle.encode({"playerID": str(player.id), "amount": dict[player]})
     else:
         return "Player not in summary for some reason"
+
+
+
+@app.route('/game/status/bets/all', methods=['VIEW'])
+def getBetStatusAll():
+    data = request.json
+    gameID = data["gameID"]
+    per_betting_round = bool(data["per_betting_round"])
+
+    game = gm.getByID(gameID)
+    # players = gm.getPlayers(gameID)
+    dict = game.bm.getBetStatus(per_betting_round)
+
+    return jsonpickle.encode({str(player.id): dict[player] for player in dict.keys()})
+
 
 
 # tested
