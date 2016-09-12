@@ -24,23 +24,36 @@ class Round(object):
         self.hands = None
         self.folded = None
 
-    def next_stage(self):
-        num = stages.index(self.stage)
-        num += 1
-        self.stage = stages[num]
+        # if deal is accidentally called twice, we don't want hands to be overwritten
+        self.stage_dealt = {stage: False for stage in stages}
 
     def deal(self):
-        if self.stage == 'HOLE':
+        if self.stage == 'HOLE' and self.stage_dealt['HOLE'] is False:
             for player in self.players:
                 player.set_hand(self.deck.draw_many(2))
-        elif self.stage == 'FLOP':
+
+            self.stage_dealt['HOLE'] = True
+            self.stage = 'FLOP'
+
+        elif self.stage == 'FLOP' and self.stage_dealt['FLOP'] is False:
             self.community_cards = self.deck.draw_many(3)
-        elif self.stage == 'TURN':
+            self.stage_dealt['FLOP'] = True
+            self.stage = 'TURN'
+
+        elif self.stage == 'TURN' and self.stage_dealt['TURN'] is False:
             turn = self.deck.draw_one()
             self.community_cards.append(turn)
-        elif self.stage == 'RIVER':
+            self.stage_dealt['TURN'] = True
+            self.stage = 'RIVER'
+
+        elif self.stage == 'RIVER' and self.stage_dealt['RIVER'] is False:
             river = self.deck.draw_one()
             self.community_cards.append(river)
+            self.stage_dealt['RIVER'] = True
+
+            # no need to set self.stage to anything, if deal() is called nothing will happen since round has been
+            # dealt.
+
         else:
             pass
 

@@ -9,6 +9,8 @@ import jsonpickle
 
 ''' Start server by typing 'sh bin/start_server.sh' in the main directory.
 
+    Or just type 'mc', followed by 'mc-start' (only works on Alex's computer).
+
     TODO - make the urls better
 
     note - JSON strings must always use double quotes
@@ -19,23 +21,12 @@ import jsonpickle
 
 '''
 
-@app.route('/test', methods=['VIEW'])
-def test_method():
-    return 'THIS IS A TEST'
-
-
-# tested
-@app.route('/game', methods=['POST'])
-def create_game():
-    game = gm.createGame()
-    return jsonpickle.encode(game)
-
+# **************************************************** General ****************************************************
 
 # tested
 @app.route('/games', methods=['VIEW'])
 def get_games():
     return jsonpickle.encode(gm.games)
-
 
 # tested
 @app.route('/games/ids', methods=['VIEW'])
@@ -51,11 +42,11 @@ def get_gameIDs():
 
     return jsonpickle.encode(dict)
 
-
 # not tested
 @app.route('/past-games', methods=['VIEW'])
 def past_games():
     return jsonpickle.encode(gm.past_games)
+
 
 
 # tested - gets players for a given game
@@ -69,6 +60,13 @@ def get_players():
     ids = [str(player.id) for player in game.players]
     return jsonpickle.encode(ids)
 
+
+# **************************************************** Game ****************************************************
+# tested
+@app.route('/game', methods=['POST'])
+def create_game():
+    game = gm.createGame()
+    return jsonpickle.encode(game)
 
 
 # tested
@@ -125,6 +123,7 @@ def getGameWinner():
     return jsonpickle.encode(game.winner())
 
 
+# **************************************************** Player ****************************************************
 # tested
 @app.route('/player/new', methods=['POST'])
 def create_player():
@@ -157,6 +156,8 @@ def get_all_player_ids():
     return jsonpickle.encode(dict)
 
 
+# ************************************************ Dealing **********************************************************
+
 @app.route('/game/round/deal', methods=['POST'])
 def deal():
     data = request.json
@@ -164,8 +165,13 @@ def deal():
     game = gm.getByID(gameID)
 
     round = game.getCurrentRound()
+    previous_stage = round.stage
     round.deal()
-    return round.stage + ' is dealt.'
+
+    d = {"Previous Stage": previous_stage,
+         "Current Stage": round.stage}
+
+    return jsonpickle.encode(d)
 
 
 # tested
@@ -180,7 +186,11 @@ def getHoleCards():
     player = pm.getByID(playerID)
 
     if player in game.players:
-        return jsonpickle.encode(player.hand)
+        arr = [str(card) for card in player.hand]
+        return jsonpickle.encode(arr)
+
+        # I'll return this one later, when I actually need to do stuff with the request
+        # return jsonpickle.encode(player.hand)
     else:
         return "Player Not Found"
 
@@ -194,20 +204,11 @@ def getCommunityCards():
     game = gm.getByID(gameID)
 
     round = game.getCurrentRound()
-    return jsonpickle.encode(round.community_cards)
 
-# tested
-# go to the next stage of a round
-@app.route('/game/round/next', methods=['POST'])
-def nextStage():
-    data = request.json
-    gameID = data["gameID"]
-    game = gm.getByID(gameID)
+    arr = [str(card) for card in round.community_cards]
+    return jsonpickle.encode(arr)
 
-    round = game.getCurrentRound()
-    round.next_stage()
-
-    return jsonpickle.encode(round.stage)
+    # return jsonpickle.encode(round.community_cards)
 
 
 @app.route('/game/over', methods=['VIEW'])
@@ -218,7 +219,26 @@ def gameIsOver():
 
     return jsonpickle.encode(game.isOver())
 
+# This method is just to make testing easier
+@app.route('/game/card/status', methods=['VIEW'])
+def cardStatus():
+    data = request.json
+    gameID = data["gameID"]
+    game = gm.getByID(gameID)
 
+    round = game.getCurrentRound()
+    commCards = [str(card) for card in round.community_cards]
+
+    playerCards = {player.name: [str(card) for card in player.hand] for player in game.players}
+    playerFold = [player.name for player in game.players if player.folded]
+
+    d = {"Community Cards": commCards, "Player's Hands": playerCards, 
+        "Players who've folded": playerFold}
+
+    return jsonpickle.encode(d)
+
+
+# ************************************************ Round **************************************************************
 # tested
 @app.route('/game/round/end', methods=['POST'])
 def endCurrentRound():
@@ -251,7 +271,17 @@ def getRoundNumber():
 
     return jsonpickle.encode(len(game.rounds))
 
+# these are the winners for the round, not the entire game. Will return None if round is still going.
+@app.route('/game/round/winner', methods=['VIEW'])
+def getRoundWinners():
+    data = request.json
+    gameID = data["gameID"]
+    game = gm.getByID(gameID)
 
+    return jsonpickle.encode(game.bm.getAllWinners())
+
+
+# ************************************************ Betting ***********************************************************
 # tested
 @app.route('/game/round/betting/start', methods=['POST'])
 def startBettingRound():
@@ -392,9 +422,7 @@ def getPots():
 
     I've also tested the situation with one raise.
 
-    TODO: test with tons of raises
-          test with no bets at all (all checks)
-          test with all folds but one
+    TODO: test with no bets at all (all checks)
 
 '''
 @app.route('/game/round/betting/next', methods=['VIEW'])
@@ -409,15 +437,6 @@ def nextBetter():
         return jsonpickle.encode({"playerID": str(next_better.id)})
     else:
         return "null"
-
-# these are the winners for the round, not the entire game. Will return None if round is still going.
-@app.route('/game/round/winner', methods=['VIEW'])
-def getRoundWinners():
-    data = request.json
-    gameID = data["gameID"]
-    game = gm.getByID(gameID)
-
-    return jsonpickle.encode(game.bm.getAllWinners())
 
 
 # tested
