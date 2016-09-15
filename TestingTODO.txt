@@ -1,0 +1,38 @@
+Ok, so, what testing do I still need to do?
+
+
+
+- Betting
+  - overall pretty tested
+  - illegal moves (betting more than you have) has not been tested
+
+
+At the end of a round, are the chips properly distributed? This needs to be tested.
+- First I'll write a test to simulate an entire round, not just a betting round.
+
+
+
+ - Rounds
+  - multiple rounds
+  - First I'll write a test to simulate an entire round, not just a betting round. (Are chips properly distributed at the end of a round?)
+
+  TODO: chips distributed in the case where a round ends by folding
+
+
+
+What are the main questions as I go through an entire round?
+
+	Is folding carried over accross multiple betting rounds?
+
+	Are chips distributed properly at the end?
+
+
+note - if you have an error or a failed test, double check that your requests are right. Almost all of the failures I've gotten have come from incorrect requests.
+
+note - every bet must come with the boolean is_raise!!!!!
+
+note - everytime after someone folds, check the fold status to see if the round is over by fold.
+
+
+I think in general things are ready to go, you just need to finish testing, document the API well, and make some solid examples.
+

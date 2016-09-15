@@ -17,12 +17,17 @@ class BetManager:
             
 
     TODO - I need a good way of saving the data to a database to use for the machine learning model.
-
+    TODO - make a list of TODO's lol
 
     Wondering if I should make a betting round object...damn betting is complicated.
 
 
     Current bet is NOT reset when a betting round is started!!!!!!
+
+
+
+    If I were to do any refactoring of this logic in a few months whenever we get the GUI and AI up and running,
+    it needs to happen primarily in this class.
     
     '''
 
@@ -35,7 +40,7 @@ class BetManager:
         # if you don't do .copy() some weird shit happens because of something horrible called "shallow copying"
         self.players = game.players.copy()
 
-        # table is a stack of the players (ok a mini-stack, it's like 15% implemented haha)
+        # table is a queue of the players (ok a mini-queue, it's like 15% implemented haha)
         self.table = game.players.copy()
 
         self.chips = {player: player.chips for player in self.players}
@@ -62,10 +67,13 @@ class BetManager:
 
     def startBettingRound(self, firstOfRound=True):
         self.started = True
+        self.current_bet = 0
+        self.reorderTable()
 
         # If this is the first betting round of the round, we need to set the mpp of the main pot
         if firstOfRound:
             self.pots[0].max_per_player = min(self.chips.values())
+            self.betting_round_num += 1
         else:
             self.betting_round_num += 1
 
@@ -109,7 +117,7 @@ class BetManager:
         if player in self.table:
             self.table.remove(player)
 
-    def nextBetter(self):
+    def nextBettor(self):
         if not self.started:
             return "Betting Round Not Started."
         else:
@@ -147,35 +155,33 @@ class BetManager:
 
         Note that we will take extra care to only present the user with valid bet options.
     '''
-    def bet(self, player, amount, is_raise=False):
+    def bet(self, player, amount, is_raise):
 
         # if you switch the order of these two lines it fucks up everything
         betStatus = self.getBetStatus(per_betting_round=True)
         player.bets.append(Bet(amount, self.betting_round_num))
 
         if is_raise:
-            # print("RAISE WAS SET, MATCHED RAISE UPDATED.")
             self.setRaise(player)
 
             # this line is screwing up the multiple betting rounds thing.
-            print("bet status: " + str(betStatus[player]))
-            print("amount: " + str(amount))
+            # TODO: PROBLEM ON THIS NEXT LINE! IT'S SETTING CURRENT BET INCORRECTLY ACROSS MULTIPLE BETTING ROUNDS
             self.current_bet = betStatus[player] + amount
-            print("Current bet updated: " + str(self.current_bet))
 
         already_bet = betStatus[player]
 
         if amount == self.current_bet or player.chips - amount == 0 or already_bet + amount == self.current_bet:
-            # print("PLAYER RAISE STATUS UPDATED.")
             self.matched_raise[player] = True
 
             # move the player who just bet to the back of the stack
             self.table.append(self.table.pop(0))
 
         while amount > 0:
+            i = 0
             for pot in self.pots:
                 self.update_eligibles()
                 # Clause A - if the pot is not maxed and the player hasn't bet his max amount in the current pot
+
                 if not pot.is_maxed and pot.counts[player] < pot.max_per_player:
                     # A.1
                     if pot.counts[player] + amount <= pot.max_per_player:
@@ -213,11 +219,23 @@ class BetManager:
                     self.pots.append(new_pot)
 
 
+                i += 1
+
+
 
     # internal
     def setRaise(self, player):
         self.matched_raise = {player: False for player in self.table}
         self.matched_raise[player] = True
+
+        # so this is recalculated a little less, I'm gonna compute it here.
+        betStatus = self.getBetStatus()
+        for player in self.table:
+            if self.hasBetAllChips(player, betStatus):
+                self.matched_raise[player] = True
+
+    def hasBetAllChips(self, player, betStatus):
+        return betStatus[player] == self.chips_at_beginning[player]
 
     # internal
     def pot_folded(self, pot):
@@ -242,7 +260,7 @@ class BetManager:
 
         for player in pot.players:
             if player.hand is None:
-                # if they haven't dealt yet
+                # if they haven't dealt yet - and if cards haven't been dealt, no bets have been placed
                 return None
 
             round = self.game.getCurrentRound()
@@ -291,6 +309,11 @@ class BetManager:
 
     # internal UE
     def distribute(self):
+        i = 1
+        for player in self.players:
+            # updating their chip count to match the activities of the round, until now it's been local to bet manager
+            player.chips = self.chips[player]
+
         for pot in self.pots:
             winners = self.getPotWinner(pot)
             if winners is None:
@@ -303,6 +326,8 @@ class BetManager:
                 share = pot.get_amount() / float(len(winners))
                 for winner in winners:
                     winner.chips += share
+
+            i += 1
 
 
 
@@ -317,8 +342,13 @@ class BetManager:
     def reset(self):
         self.minimum_bet = 0
         self.set_min()
-
         self.current_bet = 0
+        self.players = self.game.players.copy()
+        self.table = self.game.players.copy()
+        self.chips = {player: player.chips for player in self.players}
+        self.chips_at_beginning = {player: player.chips for player in self.players}
+
+
 
     # internal and stays in this class
     def set_min(self):
@@ -349,8 +379,14 @@ class BetManager:
 
         else:
             return False
-        
 
+
+    # internal - at the start of each betting round, we need to make sure everyone is betting in the right order
+    def reorderTable(self):
+        self.game.players.copy()
+        temp = [player for player in self.game.players.copy() if player in self.table]
+
+        self.table = temp
 
 
 

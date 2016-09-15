@@ -11,7 +11,7 @@ import jsonpickle
 
     Or just type 'mc', followed by 'mc-start' (only works on Alex's computer).
 
-    TODO - make the urls better
+    TODO - make the urls bettor
 
     note - JSON strings must always use double quotes
     note - in JSON, send true as 1 and false as 0.
@@ -153,17 +153,20 @@ def get_all_player_ids():
 
         string = "player"
 
-    return jsonpickle.encode(dict)
+    d = {pm.players[id].name: id for id in pm.players.keys()}
+
+    return jsonpickle.encode(d)
 
 
 # ************************************************ Dealing **********************************************************
 
-@app.route('/game/round/deal', methods=['POST'])
+@app.route('/game/round/deal', methods=['POST', 'VIEW'])
 def deal():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
-
+    if game is None:
+    	print("Game is none..hmmm")
     round = game.getCurrentRound()
     previous_stage = round.stage
     round.deal()
@@ -247,7 +250,9 @@ def endCurrentRound():
 
     game = gm.getByID(gameID)
     game.endCurrentRound()
-    return 'Round ended.'
+    chips = {player.name: player.chips for player in game.players}
+
+    return jsonpickle.encode(chips)
 
 
 # It's important to not create a new round if one is still going on!
@@ -292,10 +297,10 @@ def startBettingRound():
     firstOfRound = bool(data["firstOfRound"])
     game.bm.startBettingRound(firstOfRound)
 
-    next_better = game.bm.nextBetter()
+    next_bettor = game.bm.nextBettor()
 
-    if next_better is not None:
-        return jsonpickle.encode({"playerID": str(next_better.id)})
+    if next_bettor is not None:
+        return jsonpickle.encode({"playerID": str(next_bettor.id)})
     else:
         return "Game has no players."
 
@@ -338,6 +343,18 @@ def getBetStatus():
         return "Player not in summary for some reason"
 
 
+# more for testing than for use
+@app.route('/game/status/chips', methods=['VIEW'])
+def getChipStatus():
+    data = request.json
+    gameID = data["gameID"]
+
+    game = gm.getByID(gameID)
+    
+    d = {str(player.name): game.bm.chips[player] for player in game.bm.players}
+    return jsonpickle.encode(d)
+
+
 
 @app.route('/game/status/bets/all', methods=['VIEW'])
 def getBetStatusAll():
@@ -377,12 +394,12 @@ def fold():
     
     game.bm.fold(player)
 
-    next_better = game.bm.nextBetter()
+    next_bettor = game.bm.nextBettor()
 
-    if next_better is not None:
-        return jsonpickle.encode({"playerID": str(next_better.id)})
+    if next_bettor is not None:
+        return jsonpickle.encode({"playerID": str(next_bettor.id)})
     else:
-        return "null'"
+        return "null"
 
 
 # some testing done
@@ -397,14 +414,13 @@ def bet():
     
     amount = int(data["amount"])
     is_raise = bool(data["is_raise"])
-    print("is_raise = " + str(is_raise))
     
     game.bm.bet(player, amount, is_raise)
 
-    next_better = game.bm.nextBetter()
+    next_bettor = game.bm.nextBettor()
 
-    if next_better is not None:
-        return jsonpickle.encode({"playerID": str(next_better.id)})
+    if next_bettor is not None:
+        return jsonpickle.encode({"playerID": str(next_bettor.id)})
     else:
         return "null"
 
@@ -426,15 +442,15 @@ def getPots():
 
 '''
 @app.route('/game/round/betting/next', methods=['VIEW'])
-def nextBetter():
+def nextBettor():
     data = request.json
     gameID = data["gameID"]
 
     game = gm.getByID(gameID)
-    next_better = game.bm.nextBetter()
+    next_bettor = game.bm.nextBettor()
 
-    if next_better is not None:
-        return jsonpickle.encode({"playerID": str(next_better.id)})
+    if next_bettor is not None:
+        return jsonpickle.encode({"playerID": str(next_bettor.id)})
     else:
         return "null"
 
@@ -461,7 +477,9 @@ def getFoldStatus():
     dict = game.bm.getFoldStatus()
     dict2 = {str(player.id): str(dict[player]) for player in dict.keys()}
 
-    return jsonpickle.encode(dict2)
+    dict3 = {player.name: str(dict[player]) for player in dict.keys()}
+
+    return jsonpickle.encode(dict3)
 
 
 

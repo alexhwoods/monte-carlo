@@ -58,10 +58,13 @@ class Game(object):
 
     def endCurrentRound(self):
         round = self.rounds[-1]
-        for player in self.players:
-            player.hand = None
+
         # giving the chips to those that won them
         self.bm.distribute()
+
+        for player in self.players:
+            player.hand = None
+        
         round.over = True
         self.bm.reset()
 

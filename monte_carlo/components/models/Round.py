@@ -2,7 +2,6 @@
 from monte_carlo.components.models.Hand import Hand
 from monte_carlo.components.managers.BetManager import BetManager
 
-from pprint import pprint
 
 stages = ['HOLE', 'FLOP', 'TURN', 'RIVER']
 betting_stages = ['PRE_FLOP', 'POST_FLOP', 'POST_TURN', 'SHOWDOWN']
