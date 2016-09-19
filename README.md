@@ -8,7 +8,7 @@ A url will be released soon to visit the web-app.
 
 ## Development
 
-Visit the docs for the API [here](https://alexhwoods.github.io/slate/).
+Visit the API [documentation](https://alexhwoods.github.io/slate/).
 
 
 
