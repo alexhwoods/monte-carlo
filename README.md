@@ -2,20 +2,14 @@
 
 Poker AI
 
+A url will be released soon to visit the web-app.
 
 
 
-## Install
+## Development
 
-```
-$ TODO
-```
+Visit the docs for the API [here](https://alexhwoods.github.io/slate/).
 
-
-
-## Usage
-
-TODO
 
 
 
