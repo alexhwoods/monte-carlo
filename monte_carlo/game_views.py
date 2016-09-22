@@ -24,13 +24,13 @@ import jsonpickle
 # **************************************************** General ****************************************************
 
 # tested TODO - check return val
-@app.route('/games', methods=['VIEW'])
-def get_games():
+@app.route('/games', methods=['GET', 'VIEW'])
+def getGames():
     return jsonpickle.encode(gm.games)
 
 # tested TODO - check return val
-@app.route('/games/ids', methods=['VIEW'])
-def get_gameIDs():
+@app.route('/games/ids', methods=['GET', 'VIEW'])
+def getGameIDs():
     dict = {}
     string = "game"
     num = 1
@@ -43,15 +43,15 @@ def get_gameIDs():
     return jsonpickle.encode(dict)
 
 # not tested; TODO - check return val
-@app.route('/past-games', methods=['VIEW'])
-def past_games():
+@app.route('/games/past', methods=['GET', 'VIEW'])
+def pastGames():
     return jsonpickle.encode(gm.past_games)
 
 
 
 # tested - gets players for a given game; TODO - check return val
-@app.route('/game/players', methods=['VIEW'])
-def get_players():
+@app.route('/game/players', methods=['GET', 'VIEW'])
+def getPlayers():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
@@ -62,16 +62,20 @@ def get_players():
 
 
 # **************************************************** Game ****************************************************
-# tested TODO - check return val
-@app.route('/game', methods=['POST'])
-def create_game():
+# tested TODO - needs a better url
+@app.route('/game/new', methods=['POST'])
+def createGame():
     game = gm.createGame()
-    return jsonpickle.encode(game)
+
+    # this dummy return val was here for testing
+    # return jsonpickle.encode(game)
+    
+    return jsonpickle.encode({"id": str(game.id)})
 
 
-# tested TODO - check return val
-@app.route('/games/find', methods=['VIEW'])
-def get_game():
+# tested
+@app.route('/games/find', methods=['GET', 'VIEW'])
+def getGame():
     data = request.json
     gameID = data["gameID"]
 
@@ -87,9 +91,9 @@ def joinGame():
     playerID = data["playerID"]
     players = gm.joinGame(playerID, gameID)
     if players is not None:
-        return "Player Joined"
+        return jsonpickle.encode({playerID: "Joined"})
     else:
-        return "Player Not Found"
+        return jsonpickle.encode({playerID: "Not Found"})
 
 
 # tested TODO - check return val
@@ -100,12 +104,12 @@ def startGame():
     game = gm.getByID(gameID)
     if game is not None:
         game.start()
-        return jsonpickle.encode({gameID: "started"})
+        return jsonpickle.encode({gameID: "Started"})
     else:
-        return "Game Not Found"
+        return jsonpickle.encode({gameID: "Not Found"})
 
 
-# tested TODO - check return val
+# tested TODO - check return val 
 @app.route('/game/end', methods=['POST'])
 def endGame():
     data = request.json
@@ -115,34 +119,35 @@ def endGame():
     return gm.getStatus(gameID)
 
 # TODO - check return val
-@app.route('/game/winner', methods=['VIEW'])
+@app.route('/game/winner', methods=['GET', 'VIEW'])
 def getGameWinner():
     data = request.json
     gameID = data["gameID"]
     game = gm.getByID(gameID)
-    return jsonpickle.encode(game.winner())
+    winner = game.winner()
+    return jsonpickle.encode(str(winner.id))
 
 
 # **************************************************** Player ****************************************************
-# tested TODO - make this return only the player's ID, in string form.
+# tested
 @app.route('/player/new', methods=['POST'])
-def create_player():
+def createPlayer():
     data = request.json
     name = data["name"]
     chips = data["chips"]
     player = pm.create(name, chips)
-    return jsonpickle.encode(player)
+    return jsonpickle.encode({"id": str(player.id)})
 
 
 # tested TODO - make it return player's ID
-@app.route('/players', methods=['VIEW'])
-def get_all_players():
+@app.route('/players', methods=['GET', 'VIEW'])
+def getAllPlayers():
     return jsonpickle.encode(pm.players)
 
 
 # tested TODO - is this returning ID's
-@app.route('/players/ids', methods=['VIEW'])
-def get_all_player_ids():
+@app.route('/players/ids', methods=['GET', 'VIEW'])
+def getAllPlayerIds():
     dict = {}
     string = "player"
     num = 1
@@ -160,7 +165,7 @@ def get_all_player_ids():
 
 # ************************************************ Dealing **********************************************************
 # TODO - is this the return value you want?
-@app.route('/game/round/deal', methods=['POST', 'VIEW'])
+@app.route('/game/round/deal', methods=['POST'])
 def deal():
     data = request.json
     gameID = data["gameID"]
@@ -179,7 +184,7 @@ def deal():
 
 # tested TODO - edit return value
 # given a player ID and game ID return their hole cards for the current round
-@app.route('/player/cards', methods=['VIEW'])
+@app.route('/player/cards', methods=['GET', 'VIEW'])
 def getHoleCards():
     data = request.json
     gameID = data["gameID"]
@@ -200,7 +205,7 @@ def getHoleCards():
 
 # tested TODO - edit return value
 # given a game id get the community cards for the current round
-@app.route('/game/cards', methods=['VIEW'])
+@app.route('/game/cards', methods=['GET', 'VIEW'])
 def getCommunityCards():
     data = request.json
     gameID = data["gameID"]
@@ -214,7 +219,7 @@ def getCommunityCards():
     # return jsonpickle.encode(round.community_cards)
 
 # TODO - edit return value
-@app.route('/game/over', methods=['VIEW'])
+@app.route('/game/over', methods=['GET', 'VIEW'])
 def gameIsOver():
     data = request.json
     gameID = data["gameID"]
@@ -223,7 +228,7 @@ def gameIsOver():
     return jsonpickle.encode(game.isOver())
 
 # This method is just to make testing easier, TODO - edit return value
-@app.route('/game/card/status', methods=['VIEW'])
+@app.route('/game/card/status', methods=['GET', 'VIEW'])
 def cardStatus():
     data = request.json
     gameID = data["gameID"]
@@ -269,7 +274,7 @@ def newRound():
         return 'Still in previous round.'
 
 # TODO - check return val
-@app.route('/game/round/num', methods=['VIEW'])
+@app.route('/game/round/num', methods=['GET', 'VIEW'])
 def getRoundNumber():
     data = request.json
     gameID = data["gameID"]
@@ -279,7 +284,7 @@ def getRoundNumber():
 
 # TODO - check return val
 # these are the winners for the round, not the entire game. Will return None if round is still going.
-@app.route('/game/round/winner', methods=['VIEW'])
+@app.route('/game/round/winner', methods=['GET', 'VIEW'])
 def getRoundWinners():
     data = request.json
     gameID = data["gameID"]
@@ -307,7 +312,7 @@ def startBettingRound():
         return "Game has no players."
 
 # tested TODO - check return val
-@app.route('/game/round/betting/current', methods=['VIEW'])
+@app.route('/game/round/betting/current', methods=['GET', 'VIEW'])
 def getCurrentBet():
     data = request.json
     gameID = data["gameID"]
@@ -317,7 +322,7 @@ def getCurrentBet():
 
 
 # tested TODO - check return val
-@app.route('/game/round/betting/options', methods=['VIEW'])
+@app.route('/game/round/betting/options', methods=['GET', 'VIEW'])
 def getBettingOptions():
     data = request.json
     gameID = data["gameID"]
@@ -328,7 +333,7 @@ def getBettingOptions():
     return jsonpickle.encode(game.bm.getOptions(player))
 
 # TODO - check return val
-@app.route('/game/status/bet', methods=['VIEW'])
+@app.route('/game/status/bet', methods=['GET', 'VIEW'])
 def getBetStatus():
     data = request.json
     gameID = data["gameID"]
@@ -346,7 +351,7 @@ def getBetStatus():
 
 
 # more for testing than for use TODO - check return val
-@app.route('/game/status/chips', methods=['VIEW'])
+@app.route('/game/status/chips', methods=['GET', 'VIEW'])
 def getChipStatus():
     data = request.json
     gameID = data["gameID"]
@@ -358,7 +363,7 @@ def getChipStatus():
 
 
 # TODO - check return val
-@app.route('/game/status/bets/all', methods=['VIEW'])
+@app.route('/game/status/bets/all', methods=['GET', 'VIEW'])
 def getBetStatusAll():
     data = request.json
     gameID = data["gameID"]
@@ -373,7 +378,7 @@ def getBetStatusAll():
 
 
 # tested TODO - check return val
-@app.route('/game/round/betting/limit', methods=['VIEW'])
+@app.route('/game/round/betting/limit', methods=['GET', 'VIEW'])
 def getRaiseLimit():
     data = request.json
     gameID = data["gameID"]
@@ -427,7 +432,7 @@ def bet():
         return "null"
 
 # TODO - check return val; TODO - is this tested?
-@app.route('/game/round/pots', methods=['VIEW'])
+@app.route('/game/round/pots', methods=['GET', 'VIEW'])
 def getPots():
     data = request.json
     gameID = data["gameID"]
@@ -437,7 +442,7 @@ def getPots():
 
 
 # tested TODO - check return val
-@app.route('/game/round/betting/next', methods=['VIEW'])
+@app.route('/game/round/betting/next', methods=['GET', 'VIEW'])
 def nextBettor():
     data = request.json
     gameID = data["gameID"]
@@ -452,7 +457,7 @@ def nextBettor():
 
 
 # tested TODO - check return val
-@app.route('/game/round/status/raise', methods=['VIEW'])
+@app.route('/game/round/status/raise', methods=['GET', 'VIEW'])
 def getRaiseStatus():
     data = request.json
     gameID = data["gameID"]
@@ -465,7 +470,7 @@ def getRaiseStatus():
 
 
 # tested TODO - check return val
-@app.route('/game/round/status/fold', methods=['VIEW'])
+@app.route('/game/round/status/fold', methods=['GET', 'VIEW'])
 def getFoldStatus():
     data = request.json
     gameID = data["gameID"]
