@@ -18,7 +18,7 @@ See the API [documentation](https://alexhwoods.github.io/slate/).
 pip install -r requirements.txt
 ```
 
-To run the server, run the following command.
+To run the server, run the following command. You must be in the main parent directory for this project!
 ```sh
 sh bin/start_server.sh
 ```
