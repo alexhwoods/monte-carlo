@@ -15,7 +15,7 @@ See the API [documentation](https://alexhwoods.github.io/slate/).
 1. Clone the repo.
 2. In the main directory, run 
 ```sh
-	pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 To run the server, run the following command.
