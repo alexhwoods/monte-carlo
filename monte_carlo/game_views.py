@@ -63,6 +63,7 @@ def getPlayers():
 
 # **************************************************** Game ****************************************************
 # tested TODO - needs a better url
+# TODO - return entire instance instead of just ID
 @app.route('/game/new', methods=['POST'])
 def createGame():
     game = gm.createGame()
