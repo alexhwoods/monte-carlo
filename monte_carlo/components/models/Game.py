@@ -83,9 +83,21 @@ class Game(object):
         else:
             return None
 
+    def toSimple(self):
+    	gs = GameSimple(self)
+    	return gs
 
 
+# TODO - make a GameSimple object to return over the API—containing all the necessary 
+# 		 information for the front end to work, but none of the inner details,
+# 		 such as the bet manager.
 
+class GameSimple():
+	def __init__(self, game):
+		self.id = str(game.id)
+		self.players = game.players
+		self.table_min = game.table_min
+		self.num_rounds = len(game.rounds)
 
 
 

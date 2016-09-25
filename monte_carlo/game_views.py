@@ -63,7 +63,6 @@ def getPlayers():
 
 # **************************************************** Game ****************************************************
 # tested TODO - needs a better url
-# TODO - return entire instance instead of just ID
 @app.route('/game/new', methods=['POST'])
 def createGame():
     game = gm.createGame()
@@ -71,12 +70,21 @@ def createGame():
     # this dummy return val was here for testing
     # return jsonpickle.encode(game)
     
-    return jsonpickle.encode({"id": str(game.id)})
+    return jsonpickle.encode(game.toSimple())
 
 
 # tested
 @app.route('/games/find', methods=['GET', 'VIEW'])
 def getGame():
+    data = request.json
+    gameID = data["gameID"]
+
+    game = gm.getByID(gameID)
+    return jsonpickle.encode(game.toSimple())
+
+# return a full game, not just a simplified one
+@app.route('/games/find/full', methods=['GET', 'VIEW'])
+def getGameFull():
     data = request.json
     gameID = data["gameID"]
 
