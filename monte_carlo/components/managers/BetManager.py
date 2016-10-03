@@ -295,8 +295,13 @@ class BetManager:
         raise_status = self.getRaiseStatus()
         if False in raise_status.values():
             return None
-        else:
-            return dict
+        
+        dict2 = {}
+        for pot,winners in dict:
+            dict2[winners] = pot.amount
+
+
+        return dict2
 
     def getRaiseStatus(self):
         return self.matched_raise

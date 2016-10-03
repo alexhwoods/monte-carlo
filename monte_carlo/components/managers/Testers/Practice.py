@@ -1,20 +1,40 @@
-from monte_carlo.components.models.Card import Card
-from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.models.Hand import Hand
+from monte_carlo.components.models.Game import Game
 from monte_carlo.components.models.Player import Player
+import monte_carlo.components.managers.GameManager as gm
+import monte_carlo.components.managers.PlayerManager as pm
+import jsonpickle
+
+
+game = Game()
+
+a = Player("A", 10)
+b = Player("B", 20)
+c = Player("C", 20)
+
+
+game.add_player(a)
+game.add_player(b)
+game.add_player(c)
+
+game.start()
+game.bm.startBettingRound()
+print("First bettor = " + str(game.bm.nextBettor()))
+
+game.bm.bet(a, 10, True)
+print("Next bettor = " + str(game.bm.nextBettor()))
+
+game.bm.bet(b, 15, True)
+print("Next bettor = " + str(game.bm.nextBettor()))
+# print("Bet Status: " + str(game.bm.getBetStatus()))
+# print("Table: " + str([str(player) for player in game.bm.table]))
+# d = {player.name: result for player, result in game.bm.}
+
+game.bm.bet(c, 15, False)
+print("Next bettor = " + str(game.bm.nextBettor()))
+
+
+# e agora tudo tá funcionando :)
 
 
 
-""" Just became aware of some good python design practices, going to do some refactoring
-"""
 
-
-alex = Player("Alex", 200)
-alex.set_hand([Card('spades', '3'), Card('diamonds', '6'), Card('spades', 'king'),
-               Card('hearts', '9'), Card('clubs', 'jack')])
-
-
-comm_cards = [Card('clubs', '2')]
-
-for card in Hand(comm_cards)+alex.hand:
-    print(card)

@@ -58,15 +58,17 @@ class Game(object):
 
     def endCurrentRound(self):
         round = self.rounds[-1]
+        if not round.over:
+            # giving the chips to those that won them
+            self.bm.distribute()
 
-        # giving the chips to those that won them
-        self.bm.distribute()
-
-        for player in self.players:
-            player.hand = None
-        
-        round.over = True
-        self.bm.reset()
+            for player in self.players:
+                player.hand = None
+            
+            round.over = True
+            self.bm.reset()
+            return True
+        return False
 
     def isOver(self):
         chips = [player.chips for player in self.players]
