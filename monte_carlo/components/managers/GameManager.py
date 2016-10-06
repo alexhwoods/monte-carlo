@@ -1,5 +1,5 @@
-from monte_carlo.components.models.Game import Game
-import monte_carlo.components.managers.PlayerManager as pm
+from components.models.Game import Game
+from components.managers import PlayerManager   # PlayerManager is not a class!!!
 
 
 games = {}
@@ -30,7 +30,7 @@ def getByID(gameID):
 
 
 def joinGame(playerID, gameID):
-    player = pm.getByID(playerID)
+    player = PlayerManager.getByID(playerID)
     game = getByID(gameID)
 
     if game is not None and player is not None and player not in game.players:

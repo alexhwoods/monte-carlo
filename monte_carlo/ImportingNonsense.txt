@@ -1,0 +1,15 @@
+I think at this point you've resolved the issues, but I wouldn't be surprised if more import issues come up...because it's Python.
+
+If you get:
+ImportError Cannot import NAME
+
+Try running the file at the same time.
+
+
+ImportError No module named
+
+- Try the solution found in basic.py, using sys.path.append(...).
+
+This is the one that sucks. At this point components is a module, but I'm not sure what I have to do in order to make other things modules. I've added them to the python paths, etc. It's a mess!
+
+

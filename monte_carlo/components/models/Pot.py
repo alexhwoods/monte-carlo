@@ -1,6 +1,6 @@
 # Author Alex Woods <alexhwoods@gmail.com>
-from monte_carlo.components.models.Hand import Hand
-from monte_carlo.components.models.Player import Player
+from components.models.Hand import Hand
+from components.models.Player import Player
 
 class Pot(object):
     ''' While you might think Pot is not important enough to be an attribute, if we give it object level status,

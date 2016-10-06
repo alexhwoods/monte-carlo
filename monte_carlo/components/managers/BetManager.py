@@ -1,5 +1,5 @@
-from monte_carlo.components.models.Hand import Hand
-from monte_carlo.components.models.Pot import Pot
+from components.models.Hand import Hand
+from components.models.Pot import Pot
 import collections
 import math
 
@@ -38,10 +38,11 @@ class BetManager:
         self.betting_round_num = 0
 
         # if you don't do .copy() some weird shit happens because of something horrible called "shallow copying"
-        self.players = game.players.copy()
+        # FIXME
+        self.players = list(game.players)
 
         # table is a queue of the players (ok a mini-queue, it's like 15% implemented haha)
-        self.table = game.players.copy()
+        self.table = list(game.players)
 
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
@@ -51,7 +52,7 @@ class BetManager:
         self.pots = [Pot(self.players, 0)]
 
         # players eligible to join the next side pot, only used internally
-        self.eligibles = self.players.copy()
+        self.eligibles = list(self.players)
         self.update_eligibles()
 
         # only used internally
@@ -348,8 +349,8 @@ class BetManager:
         self.minimum_bet = 0
         self.set_min()
         self.current_bet = 0
-        self.players = self.game.players.copy()
-        self.table = self.game.players.copy()
+        self.players = list(self.game.players)
+        self.table = list(self.game.players)
         self.chips = {player: player.chips for player in self.players}
         self.chips_at_beginning = {player: player.chips for player in self.players}
 
@@ -388,9 +389,7 @@ class BetManager:
 
     # internal - at the start of each betting round, we need to make sure everyone is betting in the right order
     def reorderTable(self):
-        self.game.players.copy()
-        temp = [player for player in self.game.players.copy() if player in self.table]
-
+        temp = [player for player in list(self.players) if player in self.table]
         self.table = temp
 
 

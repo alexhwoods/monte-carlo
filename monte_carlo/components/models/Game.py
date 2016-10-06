@@ -1,8 +1,8 @@
 # Author Alex Woods <alexhwoods@gmail.com>
 import uuid
-from monte_carlo.components.models.Deck import Deck
-from monte_carlo.components.models.Round import Round
-from monte_carlo.components.managers.BetManager import BetManager
+from components.models.Deck import Deck
+from components.models.Round import Round
+from components.managers.BetManager import BetManager
 
 
 class Game(object):
@@ -71,6 +71,9 @@ class Game(object):
         return False
 
     def isOver(self):
+        if self.players == []:
+            # (I had this problem earlier)
+            print("There are no players in this game!")
         chips = [player.chips for player in self.players]
         chips = [x for x in chips if x != 0]
 
@@ -90,7 +93,6 @@ class Game(object):
     	return gs
 
 
-# TODO - make a GameSimple object to return over the API—containing all the necessary 
 # 		 information for the front end to work, but none of the inner details,
 # 		 such as the bet manager.
 

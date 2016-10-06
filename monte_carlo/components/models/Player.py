@@ -1,6 +1,6 @@
 # Author Alex Woods <alexhwoods@gmail.com>
 import uuid
-from monte_carlo.components.models.Hand import Hand
+from components.models.Hand import Hand
 
 
 class Player(object):

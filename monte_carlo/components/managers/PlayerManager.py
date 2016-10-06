@@ -1,4 +1,4 @@
-from monte_carlo.components.models.Player import Player
+from components.models.Player import Player
 
 
 players = {}

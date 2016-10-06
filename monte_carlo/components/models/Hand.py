@@ -1,5 +1,5 @@
 # Author: Alex Woods <alexhwoods@gmail.com>
-from monte_carlo.components.models.Card import Card
+from components.models.Card import Card
 from itertools import combinations
 from pprint import pprint
 

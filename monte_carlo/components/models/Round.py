@@ -1,6 +1,6 @@
 # Author Alex Woods <alexhwoods@gmail.com>
-from monte_carlo.components.models.Hand import Hand
-from monte_carlo.components.managers.BetManager import BetManager
+from components.models.Hand import Hand
+from components.managers.BetManager import BetManager
 
 
 stages = ['HOLE', 'FLOP', 'TURN', 'RIVER']
