@@ -1,11 +1,13 @@
 import sys
-# I swear this part was a nightmare to figure out
+# I swear this part was a nightmare to figure out - this has to be accurate!!!!!
 sys.path.append("/Users/alexwoods/Desktop/Projects/poker/monte-carlo/")
+# print(sys.path)
 
 from monte_carlo.components.models.Game import Game
 from monte_carlo.components.models.Round import Round
 from monte_carlo.components.models.Player import Player
 from monte_carlo import cli
+import pprint
 
 
 
@@ -20,6 +22,9 @@ from monte_carlo import cli
 	4. Remember - bad requests break things!!!
 	5. Give the user the option to have things explained to him as the game moves
 	   along (i.e. what does 'check' mean)
+	6. I'll have to use sysargv or click or some kind of tool in order to allow the
+	   user to pass in options about the game.
+	7. Go back and build this with click.
 '''
 
 
@@ -32,6 +37,12 @@ from monte_carlo import cli
 '''
 # note - Compile constantly, so you will know if you have any problems!
 
+def chipTester():
+	d = cli.getChipStatus(gameID)
+	d2 = {}
+	d2[user.name] = d[userID]
+	d2[aiPlayer.name] = d[aiPlayerID]
+	print(str(d2) + "\n")
  
 # Setting Things Up
 
@@ -51,7 +62,7 @@ game.add_player(aiPlayer)
 
 # starts the game!
 game.start()
-
+print("Game has started!\n")
 # # Uncomment to go from round -> game
 # while loop condition works!
 # while not game.isOver():
@@ -61,14 +72,20 @@ game.start()
 # Make the mechanics of one round first then put it in while loop
 # The first round has been initiated with start game
 print(cli.deal(gameID))
+print("Dealing...\n")
 
+print("Your cards are: ")
+user.hand.show()
+print()
 
 # use this to make sure dealing happens correctly!
-print(cli.cardStatus(gameID))
+# print(cli.cardStatus(gameID))
 
 # todo - here you should output the user's card to him
 
 # you're going to have to take user input soon...
+
+chipTester()
 
 cli.startBettingRound(gameID, firstOfRound=True)
 
@@ -76,30 +93,70 @@ while cli.nextBettor(gameID) is not None:
 	if cli.nextBettor(gameID) == user:
 		print("\n\nUser's options are: " + str(cli.getBettingOptions(gameID, userID)))
 		print("Max Bet: " + str(cli.maxBet(gameID, userID)))
-		print("Current Bet: " + str(cli.getCurrentBet(gameID)))
+		print("Current Bet: " + str(cli.getCurrentBet(gameID)) + "\n")
 
 		# TODO - prompt the user for their move. 
 		# remember - MAKE SURE IT'S A VALID MOVE
+		# validMoves = ['check', '[number]']
+		print("Type 'check' to match the current bet, 'call' to bet 0 if " +
+			"nothing has been bet, or an integer X to bet X chips.")
+
+		betMade = False
+
+		while not betMade:
+			value = raw_input("Enter betting command: ")
+			if value.isdigit():
+			    amount = int(value)
+			    # if it's a valid amount to bet, bet it.
+
+			    if amount <= cli.maxBet(gameID, userID):
+			    	is_raise = False
+			    	if amount > cli.getCurrentBet(gameID):
+			    		is_raise = True
+			    	cli.bet(gameID, userID, amount, is_raise)
+			    	betMade = True
+			    else:
+			    	print("You can only bet " + str(cli.maxBet(gameID, userID)) +
+			    		", please enter another betting command.\n")
+
+
+
+			else:
+				if value.upper() == 'CHECK':
+					cli.bet(gameID, userID, cli.getCurrentBet(gameID), is_raise=False)
+					betMade = True
+				elif value.upper() == 'CALL':
+					if cli.getCurrentBet(gameID) == 0:
+						cli.bet(gameID, userID, 0, is_raise=False)
+						betMade = True
+					else:
+						print("'call' is not a valid move at this time, since the current " + 
+							"bet is non-zero. 'check' will match it.\n")
+
+
+
 	else:
 		pass
-		# it's the Anakin's turn to bet
-		# in the future the AI's move will go here, for now it will
-		# be a dummy move.
-		# The dummy move will never be folding, but the real AI might 
-		# make that move
+		# THIS IS A DUMMY MOVE
+		# TODO - make the AI.
 		
 		# for now, he'll match the current bet, 
 		# or if the user checks, he'll bet min(5, all of his chips)
 		currentBet = cli.getCurrentBet(gameID)
 		maxBet = cli.maxBet(gameID, aiPlayerID)
+		betAmount = 0
 		if maxBet >= currentBet:
-			cli.bet(gameID, aiPlayerID, currentBet, is_raise=False)
+			betAmount = currentBet
+			
 		else:
 			# TODO - this line isn't good enough because maxBet isn't right
-			cli.bet(gameID, aiPlayerID, maxBet, is_raise=False)
-	
+			betAmount = maxBet
 
-	break
+		cli.bet(gameID, aiPlayerID, betAmount, is_raise=False)
+		print("Anakin bet " + str(betAmount) + ".")
+
+
+chipTester()
 
 
 

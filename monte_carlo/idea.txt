@@ -1,0 +1,6 @@
+You could write methods such as
+
+1. Handle pregrame business
+2. Deal
+3. start betting round
+4. arrange winner so

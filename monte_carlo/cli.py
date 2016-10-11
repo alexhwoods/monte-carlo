@@ -271,10 +271,11 @@ def getRaiseLimit(gameID, playerID):
 
     return {playerID: game.bm.getRaiseLimit(player)}
 
+# todo - I want this in terms of max he can bet, not max he can raise
 def maxBet(gameID, playerID):
     game = gm.getByID(gameID)
     player = pm.getByID(playerID)
-    return game.bm.getRaiseLimit(player)
+    return game.bm.getMaxBet(player)
 
 # tested 
 def fold(gameID, playerID):
@@ -291,7 +292,6 @@ def fold(gameID, playerID):
         return "null"
 
 
-# TODO - make more cli oriented
 def bet(gameID, playerID, amount, is_raise=False):
     game = gm.getByID(gameID)
     player = pm.getByID(playerID)

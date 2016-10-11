@@ -89,11 +89,13 @@ class BetManager:
             opts.append('RAISE')
             opts.append('FOLD')
 
+        # just separating these for understanding reasons, could just be one else
         elif self.chips[player] == self.current_bet:
             opts.append('CHECK')
             opts.append('FOLD')
 
         else:
+            # check here has a different meaning
             opts.append('CHECK')
             opts.append('FOLD')
 
@@ -104,6 +106,9 @@ class BetManager:
             return None
         else:
             return self.chips[player] - self.current_bet
+
+    def getMaxBet(self, player):
+        return self.chips[player]
 
     def getPots(self):
         if not self.started:
